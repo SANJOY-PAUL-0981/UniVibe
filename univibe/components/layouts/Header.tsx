@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { useAnimateOnScroll } from "@/hooks/useAnimateOnScroll";
 
 const navItems = [
   { label: "Focus Room", href: "#" },
@@ -10,12 +13,16 @@ const navItems = [
   { label: "Contact Us", href: "#" },
 ];
 
+
 const Header = () => {
+  const { ref, isVisible } = useAnimateOnScroll();
   return (
-    <header className="px-4 pt-4 md:px-8">
-      <div className="mx-auto h-24 max-w-7xl px-3">
+    <header ref={ref} className="px-4 pt-4 md:px-8">
+      <div
+        className={`${isVisible ? "in-view" : ""} mx-auto h-24 max-w-7xl px-3`}
+      >
         <div className="flex h-full items-center gap-5 md:gap-8">
-          <div className="flex items-center gap-2 text-4xl font-bold">
+          <div className="flex items-center gap-2 text-4xl font-bold reveal-right">
             <Image
               src="/logo.png"
               alt="Logo"
@@ -31,7 +38,7 @@ const Header = () => {
             </div>
           </div>
 
-          <nav className="hidden flex-1 justify-center md:flex">
+          <nav className="hidden flex-1 justify-center md:flex reveal-down">
             <ul className="flex h-12 items-center gap-1 rounded-full bg-muted/50 p-1.5">
               {navItems.map((item) => (
                 <li key={item.label}>
@@ -49,9 +56,12 @@ const Header = () => {
             </ul>
           </nav>
 
-          <div className="ml-auto shrink-0">
+          <div className="ml-auto shrink-0 reveal-left">
             <Link href="/login">
-              <Button size="lg" className="h-12 rounded-full px-8 text-base font-semibold">
+              <Button
+                size="lg"
+                className="h-12 rounded-full px-8 text-base font-semibold"
+              >
                 Login
               </Button>
             </Link>
