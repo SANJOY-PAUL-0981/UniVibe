@@ -12,27 +12,33 @@ const navItems = [
 
 const Header = () => {
   return (
-    <header className="px-3 pt-3 md:px-6">
-      <div className="mx-auto h-20 max-w-7xl px-3">
-        <div className="flex h-full items-center gap-4 md:gap-6">
-          <div className="flex items-center gap-1 text-3xl font-bold">
-            <Image src="/logo.png" alt="Logo" width={40} height={28} className="shrink-0" />
+    <header className="px-4 pt-4 md:px-8">
+      <div className="mx-auto h-24 max-w-7xl px-3">
+        <div className="flex h-full items-center gap-5 md:gap-8">
+          <div className="flex items-center gap-2 text-4xl font-bold">
+            <Image
+              src="/logo.png"
+              alt="Logo"
+              width={60}
+              height={46}
+              className="shrink-0"
+            />
             <div className="leading-none">
               <span className="text-chart-4">U</span>
-              <span>ni</span>
+              <span className="text-chart-5">ni</span>
               <span className="text-chart-4">V</span>
-              <span>ibe</span>
+              <span className="text-chart-5">ibe</span>
             </div>
           </div>
 
           <nav className="hidden flex-1 justify-center md:flex">
-            <ul className="flex h-12 items-center gap-1 rounded-full bg-muted/70 p-1">
+            <ul className="flex h-12 items-center gap-1 rounded-full bg-muted/50 p-1.5">
               {navItems.map((item) => (
                 <li key={item.label}>
                   <Link
                     href={item.href}
                     className={[
-                      "inline-flex h-10 items-center rounded-full px-5 text-sm font-medium text-foreground/80 transition-colors",
+                      "inline-flex h-10 items-center rounded-full px-6 text-base font-medium text-foreground/80 transition-colors",
                       "hover:bg-accent hover:text-accent-foreground",
                     ].join(" ")}
                   >
@@ -44,9 +50,11 @@ const Header = () => {
           </nav>
 
           <div className="ml-auto shrink-0">
-            <Button className="h-10 rounded-full px-6 text-sm font-semibold uppercase tracking-wide">
-              Login
-            </Button>
+            <Link href="/login">
+              <Button size="lg" className="h-12 rounded-full px-8 text-base font-semibold">
+                Login
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
