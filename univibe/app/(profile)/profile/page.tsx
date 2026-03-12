@@ -18,11 +18,12 @@ const ProfilePage = async () => {
             <p className="text-2xl font-bold">
                 Profile
             </p>
-            <form action={signOutAction}>
-                <Button
-                    type="submit"
-                >Log Out</Button>
-            </form>
+
+            <Button
+                onClick={signOutAction}
+                type="submit"
+            >Log Out</Button>
+
         </div>
     )
 }
