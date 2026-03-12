@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Inter, Nunito } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -36,6 +37,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${nunito.variable} antialiased`}
       >
+        <Toaster
+        position="top-right" />
         <NextThemesProvider
           attribute="class"
           defaultTheme="light"

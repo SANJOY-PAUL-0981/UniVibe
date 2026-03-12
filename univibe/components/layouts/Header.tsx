@@ -57,7 +57,7 @@ const Header = () => {
           </nav>
 
           <div className="ml-auto shrink-0 reveal-left">
-            <Link href="/login">
+            <Link href="/auth/login">
               <Button
                 size="lg"
                 className="h-12 rounded-full px-8 text-base font-semibold"

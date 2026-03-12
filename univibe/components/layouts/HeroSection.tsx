@@ -28,7 +28,7 @@ const HeroSection = () => {
           Get work done with others from around the world.
         </p>
         <Link
-        href="/signup">
+        href="/auth/signup">
         <Button
           size="lg"
           className="mt-10 h-14 rounded-full px-9 text-lg font-extrabold tracking-tight text-white hover:bg-black/85 dark:bg-white dark:text-black dark:hover:bg-white/85 reveal-pop reveal-delay-4"
