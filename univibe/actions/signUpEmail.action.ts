@@ -24,6 +24,13 @@ export const signUpEmailAction = async (formData: FormData) => {
         }
     }
 
+    const confirmPassword = String(formData.get("confirmPassword"))
+    if(password != confirmPassword){
+        return{
+            error: "Password Not Matching"
+        }
+    }
+
     try{
         await auth.api.signUpEmail({
             body:{
