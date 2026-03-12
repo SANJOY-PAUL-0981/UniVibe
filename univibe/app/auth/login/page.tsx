@@ -2,10 +2,9 @@
 
 import { MailIcon, LockIcon } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
-import { FaLinkedin } from "react-icons/fa6";
-import { BsTwitterX } from "react-icons/bs";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "@/lib/auth-client";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +32,21 @@ const LoginPage = () => {
       router.push("/profile");
     }
   };
+
+  const handleClick = async () => {
+    try {
+      setIsPending(true)
+
+      await signIn.social({
+        provider: "google",
+        callbackURL: "/profile",
+        errorCallbackURL: "/auth/login/error"
+      })
+    } catch (err) {
+      toast.error("Google sign in failed")
+      setIsPending(false)
+    }
+  }
 
   return (
     <main className="relative min-h-dvh overflow-hidden bg-background px-4 py-10 sm:px-6 lg:px-8">
@@ -100,22 +114,15 @@ const LoginPage = () => {
             <div className="h-px flex-1 bg-border" />
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Button variant="outline" size="lg" className="h-11 rounded-xl">
-              <FcGoogle className="mr-2 size-4" />
-              Sign in with Google
-            </Button>
-            <Button variant="outline" size="lg" className="h-11 rounded-xl">
-              <FaLinkedin className="mr-2 size-4" />
-              Sign in with Linkedin
-            </Button>
+          <div>
             <Button
+              disabled={isPending}
+              onClick={handleClick}
               variant="outline"
               size="lg"
-              className="h-11 rounded-xl sm:col-span-2"
-            >
-              <BsTwitterX className="mr-2 size-4" />
-              Sign in with X
+              className="h-11 w-full rounded-xl">
+              <FcGoogle className="mr-2 size-4" />
+              {isPending ? "Redirecting..." : "Sign in with Google"}
             </Button>
           </div>
 
