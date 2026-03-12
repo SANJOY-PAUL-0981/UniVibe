@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { MailIcon, LockIcon } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
@@ -19,8 +19,8 @@ const LoginPage = () => {
   const router = useRouter();
 
   const handleSubmit = async (evt: React.FormEvent<HTMLFormElement>) => {
-    evt.preventDefault()
-    setIsPending(true)
+    evt.preventDefault();
+    setIsPending(true);
 
     const formData = new FormData(evt.currentTarget);
     const { error } = await signInEmailAction(formData);
@@ -32,7 +32,7 @@ const LoginPage = () => {
       toast.success("Login successful. Good to have you back.");
       router.push("/profile");
     }
-  }
+  };
 
   return (
     <main className="relative min-h-dvh overflow-hidden bg-background px-4 py-10 sm:px-6 lg:px-8">
@@ -86,8 +86,11 @@ const LoginPage = () => {
               type="submit"
               size="lg"
               disabled={isPending}
-              className="h-11 w-full rounded-xl">
-              {isPending ? "Logging In" : "Log In"}
+              className="h-11 w-full rounded-xl"
+            >
+              <span className={`${isPending ? "animate-pulse" : ""}`}>
+                {isPending ? "Logging In" : "Log In"}
+              </span>
             </Button>
           </form>
 

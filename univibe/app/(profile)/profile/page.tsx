@@ -22,6 +22,8 @@ const ProfilePage = async () => {
             <Button
                 onClick={signOutAction}
                 type="submit"
+                 size="lg"
+                className="h-12 rounded-full px-8 text-base font-semibold"
             >Log Out</Button>
 
         </div>
