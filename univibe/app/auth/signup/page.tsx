@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { MailIcon, LockIcon, UserIcon } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
@@ -18,18 +18,18 @@ const SignupPage = () => {
   const router = useRouter();
 
   const handleSubmit = async (evt: React.FormEvent<HTMLFormElement>) => {
-    evt.preventDefault()
-    setIsPending(true)
+    evt.preventDefault();
+    setIsPending(true);
 
-    const formData = new FormData(evt.currentTarget)
+    const formData = new FormData(evt.currentTarget);
     const { error } = await signUpEmailAction(formData); // change
 
     if (error) {
-      toast.error(error)
-      setIsPending(false)
+      toast.error(error);
+      setIsPending(false);
     } else {
-      toast.success("SignUp Done")
-      router.push("/profile")
+      toast.success("SignUp Done");
+      router.push("/profile");
     }
   }
 
@@ -129,8 +129,11 @@ const SignupPage = () => {
               type="submit"
               size="lg"
               disabled={isPending}
-              className="h-11 w-full rounded-xl">
-              {isPending ? "Signnig Up" : "Sign Up"}
+              className="h-11 w-full rounded-xl"
+            >
+              <span className={`${isPending ? "animate-pulse" : ""}`}>
+                {isPending ? "Signing Up" : "Sign Up"}
+              </span>
             </Button>
           </form>
 
