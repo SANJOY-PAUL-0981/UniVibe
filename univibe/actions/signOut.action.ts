@@ -10,4 +10,5 @@ export const signOutAction = async() => {
     })
 
     redirect("/")
+    //redirect("/auth/login")
 }
