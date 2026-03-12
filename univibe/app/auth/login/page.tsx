@@ -1,14 +1,39 @@
-import { MailIcon, LockIcon, UserIcon } from "lucide-react";
+"use client"
+
+import { MailIcon, LockIcon } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { FaLinkedin } from "react-icons/fa6";
 import { BsTwitterX } from "react-icons/bs";
-import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import Link from "next/link";
+import { signInEmailAction } from "@/actions/signInEmail.action";
 
-const SignupPage = () => {
+const LoginPage = () => {
+  const [isPending, setIsPending] = useState(false);
+  const router = useRouter();
+
+  const handleSubmit = async (evt: React.FormEvent<HTMLFormElement>) => {
+    evt.preventDefault()
+    setIsPending(true)
+
+    const formData = new FormData(evt.currentTarget);
+    const { error } = await signInEmailAction(formData);
+
+    if (error) {
+      toast.error(error);
+      setIsPending(false);
+    } else {
+      toast.success("Login successful. Good to have you back.");
+      router.push("/profile");
+    }
+  }
+
   return (
     <main className="relative min-h-dvh overflow-hidden bg-background px-4 py-10 sm:px-6 lg:px-8">
       <div className="pointer-events-none absolute inset-0" />
@@ -20,27 +45,15 @@ const SignupPage = () => {
               UniVibe
             </p>
             <h1 className="text-2xl font-semibold tracking-tight text-card-foreground sm:text-3xl">
-              Create an account
+              Welcome back
             </h1>
             <p className="text-sm text-muted-foreground">
-              Join us today and start your journey
+              Sign in to continue your journey.
             </p>
           </div>
 
-          <form className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <div className="relative">
-                <UserIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Your full name"
-                  className="h-11 pl-9"
-                />
-              </div>
-            </div>
-
+          {/*login form*/}
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
@@ -48,6 +61,7 @@ const SignupPage = () => {
                 <Input
                   id="email"
                   type="email"
+                  name="email"
                   placeholder="you@example.com"
                   className="h-11 pl-9"
                 />
@@ -61,27 +75,19 @@ const SignupPage = () => {
                 <Input
                   id="password"
                   type="password"
+                  name="password"
                   placeholder="Enter your password"
                   className="h-11 pl-9"
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <div className="relative">
-                <LockIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="Re-enter your password"
-                  className="h-11 pl-9"
-                />
-              </div>
-            </div>
-
-            <Button type="submit" size="lg" className="h-11 w-full rounded-xl">
-              Sign Up with Mail
+            <Button
+              type="submit"
+              size="lg"
+              disabled={isPending}
+              className="h-11 w-full rounded-xl">
+              {isPending ? "Logging In" : "Log In"}
             </Button>
           </form>
 
@@ -94,11 +100,11 @@ const SignupPage = () => {
           <div className="grid gap-3 sm:grid-cols-2">
             <Button variant="outline" size="lg" className="h-11 rounded-xl">
               <FcGoogle className="mr-2 size-4" />
-              Sign up with Google
+              Sign in with Google
             </Button>
             <Button variant="outline" size="lg" className="h-11 rounded-xl">
               <FaLinkedin className="mr-2 size-4" />
-              Sign up with Linkedin
+              Sign in with Linkedin
             </Button>
             <Button
               variant="outline"
@@ -106,17 +112,17 @@ const SignupPage = () => {
               className="h-11 rounded-xl sm:col-span-2"
             >
               <BsTwitterX className="mr-2 size-4" />
-              Sign up with X
+              Sign in with X
             </Button>
           </div>
 
           <div className="mt-6 text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
+            Don't have an account?{" "}
             <Link
-              href="/login"
+              href="/auth/signup"
               className="font-medium text-primary underline-offset-4 transition hover:underline"
             >
-              Sign in
+              Sign Up
             </Link>
           </div>
         </section>
@@ -125,4 +131,4 @@ const SignupPage = () => {
   );
 };
 
-export default SignupPage;
+export default LoginPage;
