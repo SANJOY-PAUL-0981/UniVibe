@@ -28,22 +28,22 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // const session = await auth.api.getSession({
-  //   headers: await headers(),
-  // });
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
-  // if (!session) {
-  //   return NextResponse.json(
-  //     {
-  //       success: false,
-  //       message: "Unauthorized",
-  //     },
-  //     { status: 401 },
-  //   );
-  // }
+  if (!session) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Unauthorized",
+      },
+      { status: 401 },
+    );
+  }
 
-  // const userId = session.user.id;
-  const userId = "6CahatqijXNgUwGPJLcEBiNnJwx7KlIx"
+  const userId = session.user.id;
+
   const existingUsername = await prisma.profile.findUnique({
     where: { username: result.data.username },
   });
@@ -58,7 +58,6 @@ export async function POST(req: NextRequest) {
       { status: 409 },
     );
   }
-
 
   try {
     const profile = await prisma.profile.create({
