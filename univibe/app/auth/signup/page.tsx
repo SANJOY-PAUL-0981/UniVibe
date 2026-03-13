@@ -14,40 +14,41 @@ import { toast } from "sonner";
 import { signUpEmailAction } from "@/actions/signUpEmail.action";
 
 const SignupPage = () => {
-  const [isPending, setIsPending] = useState(false);
+  const [pendingAction, setPendingAction] = useState<"email" | "google" | null>(
+    null,
+  );
   const router = useRouter();
 
   const handleSubmit = async (evt: React.FormEvent<HTMLFormElement>) => {
     evt.preventDefault();
-    setIsPending(true);
+    setPendingAction("email");
 
     const formData = new FormData(evt.currentTarget);
     const { error } = await signUpEmailAction(formData); // change
 
     if (error) {
       toast.error(error);
-      setIsPending(false);
+      setPendingAction(null);
     } else {
       toast.success("Verification email sent! Please check your inbox.");
       router.push("/auth/verify");
     }
-  }
+  };
 
   const handleClick = async () => {
     try {
-      setIsPending(true)
+      setPendingAction("google");
 
       await signIn.social({
         provider: "google",
         callbackURL: "/profile",
-        errorCallbackURL: "/auth/login/error"
-      })
+        errorCallbackURL: "/auth/login/error",
+      });
     } catch (err) {
-      toast.error("Google sign in failed")
-      setIsPending(false)
+      toast.error("Google sign in failed");
+      setPendingAction(null);
     }
-  }
-
+  };
 
   return (
     <main className="relative min-h-dvh overflow-hidden bg-background px-4 py-10 sm:px-6 lg:px-8">
@@ -128,11 +129,13 @@ const SignupPage = () => {
             <Button
               type="submit"
               size="lg"
-              disabled={isPending}
+              disabled={pendingAction !== null}
               className="h-11 w-full rounded-xl"
             >
-              <span className={`${isPending ? "animate-pulse" : ""}`}>
-                {isPending ? "Signing Up" : "Sign Up"}
+              <span
+                className={`${pendingAction === "email" ? "animate-pulse" : ""}`}
+              >
+                {pendingAction === "email" ? "Signing Up" : "Sign Up"}
               </span>
             </Button>
           </form>
@@ -146,12 +149,19 @@ const SignupPage = () => {
           <div>
             <Button
               onClick={handleClick}
-              disabled={isPending}
+              disabled={pendingAction !== null}
               variant="outline"
               size="lg"
-              className="h-11 w-full rounded-xl">
+              className="h-11 w-full rounded-xl"
+            >
               <FcGoogle className="mr-2 size-4" />
-              {isPending ? "Redirecting..." : "Sign up with Google"}
+              <span
+                className={`${pendingAction === "google" ? "animate-pulse" : ""}`}
+              >
+                {pendingAction === "google"
+                  ? "Redirecting..."
+                  : "Sign up with Google"}
+              </span>
             </Button>
           </div>
 
