@@ -28,8 +28,8 @@ const SignupPage = () => {
       toast.error(error);
       setIsPending(false);
     } else {
-      toast.success("SignUp Done");
-      router.push("/profile");
+      toast.success("Verification email sent! Please check your inbox.");
+      router.push("/auth/verify");
     }
   }
 
