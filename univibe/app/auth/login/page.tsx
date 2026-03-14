@@ -80,6 +80,7 @@ const LoginPage = () => {
                   name="email"
                   placeholder="you@example.com"
                   className="h-11 pl-9"
+                  autoFocus
                 />
               </div>
             </div>
