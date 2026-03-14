@@ -41,9 +41,9 @@ const SignupPage = () => {
 
       await signIn.social({
         provider: "google",
-        callbackURL: "/profile",
-        errorCallbackURL: "/auth/login/error",
-      });
+        callbackURL: "/user-details",
+        errorCallbackURL: "/auth/login/error"
+      })
     } catch (err) {
       toast.error("Google sign in failed");
       setPendingAction(null);

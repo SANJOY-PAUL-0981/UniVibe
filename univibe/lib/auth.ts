@@ -27,7 +27,7 @@ export const auth = betterAuth({
         autoSignInAfterVerification: true,
         sendVerificationEmail: async ({ user, url }) => {
             const verificationUrl = new URL(url);
-            verificationUrl.searchParams.set("callbackURL", "/profile");
+            verificationUrl.searchParams.set("callbackURL", "/user-details");
 
             const result = await sendEmailAction({
                 to: user.email,
