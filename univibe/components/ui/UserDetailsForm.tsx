@@ -76,6 +76,8 @@ const UserDetailsForm = () => {
     const semesterRef = useRef<HTMLInputElement>(null)
     const referralSourceRef = useRef<HTMLInputElement>(null)
 
+    const [loading, setLoading] = useState(false)
+
     const router = useRouter()
 
     const addHobby = (val: string) => {
@@ -110,6 +112,7 @@ const UserDetailsForm = () => {
             }
             console.log(body)
 
+            setLoading(true)
             const res = await fetch("/api/users", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -119,9 +122,11 @@ const UserDetailsForm = () => {
             const data = await res.json()
 
             if (data.success === true) {
+                setLoading(false)
                 toast.success(data.message)
                 router.push("/profile")
             } else {
+                setLoading(false)
                 if (data.errors) {
                     const errors = data.errors as Record<string, string[]>
                     const firstError = Object.values(errors)[0][0]
@@ -355,8 +360,9 @@ const UserDetailsForm = () => {
 
                                     <div className="flex flex-col gap-1">
                                         <Button
+                                            disabled={loading}
                                             onClick={handleSubmit}
-                                            className="text-lg font-semibold">Submit</Button>
+                                            className="text-lg font-semibold">{loading ? "Submitting..." : "Submit"}</Button>
                                     </div>
                                 </CardContent>
                             </Card>
