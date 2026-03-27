@@ -1,7 +1,9 @@
 "use client"
 
-import * as React from "react"
+import { useState, useRef, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 import {
     Carousel,
     CarouselContent,
@@ -55,18 +57,26 @@ const MAX_HOBBIES = 5
 const TOTAL_SLIDES = 3
 
 const UserDetailsForm = () => {
-    const [api, setApi] = React.useState<CarouselApi>()
-    const [current, setCurrent] = React.useState(0)
+    const [api, setApi] = useState<CarouselApi>()
+    const [current, setCurrent] = useState(0)
 
-    const [selectedPronoun, setSelectedPronoun] = React.useState<string>("")
-    const [customPronoun, setCustomPronoun] = React.useState<string>("")
+    const [selectedPronoun, setSelectedPronoun] = useState<string>("")
+    const [customPronoun, setCustomPronoun] = useState<string>("")
     const isCustom = selectedPronoun === "other"
-
-    const [selectedHobbies, setSelectedHobbies] = React.useState<string[]>([])
-    const [hobbyInput, setHobbyInput] = React.useState<string>("")
-    const [referralSource, setReferralSource] = React.useState<string>("")
-
+    const [selectedHobbies, setSelectedHobbies] = useState<string[]>([])
+    const [hobbyInput, setHobbyInput] = useState<string>("")
+    const [isGender, setGender] = useState<string>("")
     const availableHobbies = hobbyOptions.filter(h => !selectedHobbies.includes(h))
+
+    const usernameRef = useRef<HTMLInputElement>(null)
+    const ageRef = useRef<HTMLInputElement>(null)
+    const universityRef = useRef<HTMLInputElement>(null)
+    const collegeRef = useRef<HTMLInputElement>(null)
+    const fieldOfStudyRef = useRef<HTMLInputElement>(null)
+    const semesterRef = useRef<HTMLInputElement>(null)
+    const referralSourceRef = useRef<HTMLInputElement>(null)
+
+    const router = useRouter()
 
     const addHobby = (val: string) => {
         if (!val || selectedHobbies.includes(val) || selectedHobbies.length >= MAX_HOBBIES) return
@@ -78,11 +88,52 @@ const UserDetailsForm = () => {
         setSelectedHobbies(prev => prev.filter(h => h !== hobby))
     }
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (!api) return
         setCurrent(api.selectedScrollSnap())
         api.on("select", () => setCurrent(api.selectedScrollSnap()))
     }, [api])
+
+    const handleSubmit = async () => {
+        try {
+            const body = {
+                username: usernameRef?.current?.value,
+                gender: isGender,
+                age: Number(ageRef?.current?.value),
+                pronouns: isCustom ? customPronoun : selectedPronoun,
+                university: universityRef?.current?.value,
+                college: collegeRef?.current?.value,
+                fieldOfStudy: fieldOfStudyRef?.current?.value,
+                semester: Number(semesterRef?.current?.value),
+                hobbies: selectedHobbies,
+                heardFrom: referralSourceRef?.current?.value,
+            }
+            console.log(body)
+
+            const res = await fetch("/api/users", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            })
+
+            const data = await res.json()
+
+            if (data.success === true) {
+                toast.success(data.message)
+                router.push("/profile")
+            } else {
+                if (data.errors) {
+                    const errors = data.errors as Record<string, string[]>
+                    const firstError = Object.values(errors)[0][0]
+                    toast.error(firstError)
+                } else {
+                    toast.error(data.message)
+                }
+            }
+        } catch {
+            toast.error("Something Went Wrong From client!")
+        }
+    }
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-screen py-10">
@@ -99,13 +150,19 @@ const UserDetailsForm = () => {
                                 <CardContent className="flex flex-col gap-4 pb-6">
                                     <div className="flex flex-col gap-1">
                                         <Label htmlFor="username">Username</Label>
-                                        <Input id="username" type="text" name="username" placeholder="johndoe1234" className="h-9" />
+                                        <Input
+                                            id="username"
+                                            type="text"
+                                            name="username"
+                                            ref={usernameRef}
+                                            placeholder="johndoe1234"
+                                            className="h-9" />
                                     </div>
 
                                     <div className="flex gap-4">
                                         <div className="flex flex-col gap-1 flex-1">
                                             <Label htmlFor="gender">Gender</Label>
-                                            <Select>
+                                            <Select onValueChange={(val) => setGender(val as string)}>
                                                 <SelectTrigger className="w-full">
                                                     <SelectValue placeholder="Select gender" />
                                                 </SelectTrigger>
@@ -122,7 +179,13 @@ const UserDetailsForm = () => {
                                         </div>
                                         <div className="flex flex-col gap-1 w-24">
                                             <Label htmlFor="age">Age</Label>
-                                            <Input id="age" type="number" name="age" placeholder="21" className="h-9" />
+                                            <Input
+                                                id="age"
+                                                type="number"
+                                                name="age"
+                                                ref={ageRef}
+                                                placeholder="21"
+                                                className="h-9" />
                                         </div>
                                     </div>
 
@@ -172,19 +235,43 @@ const UserDetailsForm = () => {
                                 <CardContent className="flex flex-col gap-4 pb-6">
                                     <div className="flex flex-col gap-1">
                                         <Label htmlFor="university">University</Label>
-                                        <Input id="university" type="text" name="university" placeholder="e.g. MIT" className="h-9" />
+                                        <Input
+                                            id="university"
+                                            type="text"
+                                            name="university"
+                                            ref={universityRef}
+                                            placeholder="e.g. MIT"
+                                            className="h-9" />
                                     </div>
                                     <div className="flex flex-col gap-1">
                                         <Label htmlFor="college">College</Label>
-                                        <Input id="college" type="text" name="college" placeholder="e.g. School of Engineering" className="h-9" />
+                                        <Input
+                                            id="college"
+                                            type="text"
+                                            name="college"
+                                            ref={collegeRef}
+                                            placeholder="e.g. School of Engineering"
+                                            className="h-9" />
                                     </div>
                                     <div className="flex flex-col gap-1">
                                         <Label htmlFor="field">Field of Study</Label>
-                                        <Input id="field" type="text" name="field" placeholder="e.g. Computer Science" className="h-9" />
+                                        <Input
+                                            id="field"
+                                            type="text"
+                                            name="field"
+                                            ref={fieldOfStudyRef}
+                                            placeholder="e.g. Computer Science"
+                                            className="h-9" />
                                     </div>
                                     <div className="flex flex-col gap-1">
                                         <Label htmlFor="semester">Semester</Label>
-                                        <Input id="semester" type="number" name="semester" placeholder="e.g. 4" className="h-9" />
+                                        <Input
+                                            id="semester"
+                                            type="number"
+                                            name="semester"
+                                            ref={semesterRef}
+                                            placeholder="e.g. 4"
+                                            className="h-9" />
                                     </div>
                                 </CardContent>
                             </Card>
@@ -260,14 +347,16 @@ const UserDetailsForm = () => {
                                             type="text"
                                             name="referral"
                                             placeholder="e.g. Twitter, friend, Google..."
-                                            value={referralSource}
-                                            onChange={(e) => setReferralSource(e.target.value)}
+                                            ref={referralSourceRef}
+                                            //onChange={(e) => setReferralSource(e.target.value)}
                                             className="h-9"
                                         />
                                     </div>
 
                                     <div className="flex flex-col gap-1">
-                                        <Button className="text-lg font-bold">Finish!</Button>
+                                        <Button
+                                            onClick={handleSubmit}
+                                            className="text-lg font-semibold">Submit</Button>
                                     </div>
                                 </CardContent>
                             </Card>

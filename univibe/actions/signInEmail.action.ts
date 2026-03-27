@@ -19,14 +19,17 @@ export const signInEmailAction = async (formData: FormData) => {
     }
 
     try {
-        await auth.api.signInEmail({
+        const data = await auth.api.signInEmail({
             headers: await headers(),
             body: {
                 email,
                 password
             }
         })
-        return { error: null }
+        return {
+            data,
+            error: null
+        }
     } catch (err) {
         if (err instanceof Error) {
             return {

@@ -1,6 +1,7 @@
 "use server"
 
 import { auth } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
 
 export const signUpEmailAction = async (formData: FormData) => {
     const name = String(formData.get("name"))
@@ -25,15 +26,23 @@ export const signUpEmailAction = async (formData: FormData) => {
     }
 
     const confirmPassword = String(formData.get("confirmPassword"))
-    if(password != confirmPassword){
-        return{
+    if (password != confirmPassword) {
+        return {
             error: "Password Not Matching"
         }
     }
 
-    try{
+    try {
+        const exists = await prisma.user.findUnique({
+            where: { email }
+        })
+        if (exists) {
+            return {
+                error: "User Already Exists"
+            }
+        }
         await auth.api.signUpEmail({
-            body:{
+            body: {
                 name,
                 email,
                 password
@@ -41,14 +50,14 @@ export const signUpEmailAction = async (formData: FormData) => {
         })
 
         return { error: null }
-    }catch(err){
-        if(err instanceof Error){
-            return{
+    } catch (err) {
+        if (err instanceof Error) {
+            return {
                 error: err.message
             }
         }
 
-        return{
+        return {
             error: "Internal Server Error!"
         }
     }
