@@ -31,7 +31,7 @@ const LoginPage = () => {
       setPendingAction(null);
     } else {
       toast.success("Login successful. Good to have you back.");
-      router.push("/profile"); // this will be checked, if user-details is in DB then push /profile if not in DB then push /user-details
+      router.push("/auth/callback"); // this will be checked, if user-details is in DB then push /profile if not in DB then push /user-details
     }
   };
 
@@ -41,7 +41,7 @@ const LoginPage = () => {
 
       await signIn.social({
         provider: "google",
-        callbackURL: "/profile", // this will be checked, if user-details is in DB then push /profile if not in DB then push /user-details
+        callbackURL: "/auth/callback", // this will be checked, if user-details is in DB then push /profile if not in DB then push /user-details
         errorCallbackURL: "/auth/login/error",
       });
     } catch (err) {

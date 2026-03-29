@@ -41,7 +41,7 @@ const SignupPage = () => {
 
       await signIn.social({
         provider: "google",
-        callbackURL: "/user-details",
+        callbackURL: "/auth/callback",
         errorCallbackURL: "/auth/login/error"
       })
     } catch (err) {
