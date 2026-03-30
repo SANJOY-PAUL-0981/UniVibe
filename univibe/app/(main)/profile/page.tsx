@@ -19,7 +19,7 @@ export default async function ProfilePage() {
                     {/* ── Card 1: Identity (spans 2 cols) ── */}
                     <div className="relative md:col-span-2 rounded-2xl border border-border/70 bg-card p-8 shadow-sm">
                         <div className="flex items-center gap-6">
-                            <ProfileAvatar initials={initials} />
+                            <ProfileAvatar initials={initials} imageUrl={user.profile.profilePicture} />
                             <div>
                                 <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                                     @{profile.username}
@@ -31,7 +31,7 @@ export default async function ProfilePage() {
 
                         {/* Sign out — top right */}
                         <form action={signOutAction} className="absolute right-6 top-6">
-                            <Button type="submit" variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground rounded-full">
+                            <Button type="submit" variant="destructive" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground rounded-full">
                                 <LogOut className="h-4 w-4" />
                                 Sign out
                             </Button>

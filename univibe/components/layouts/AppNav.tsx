@@ -12,11 +12,12 @@ const navItems = [
 ];
 
 type Props = {
-  username: string; 
+  username: string;
   name: string;
+  imageUrl?: string | null;
 };
 
-const AppNav = ({ username, name }: Props) => {
+const AppNav = ({ username, name, imageUrl }: Props) => {
   const { ref, isVisible } = useAnimateOnScroll();
   const pathname = usePathname();
 
@@ -71,8 +72,12 @@ const AppNav = ({ username, name }: Props) => {
           {/* Avatar with initials */}
           <div className="ml-auto shrink-0 reveal-left">
             <Link href="/profile">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-chart-4 text-sm font-bold text-white ring-2 ring-border hover:ring-chart-4 transition-all">
-                {initials}
+              <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-chart-4 text-sm font-bold text-white ring-2 ring-border transition-all hover:ring-chart-4">
+                {imageUrl ? (
+                  <Image src={imageUrl} alt={`${name} profile image`} fill sizes="48px" className="object-cover" />
+                ) : (
+                  initials
+                )}
               </div>
             </Link>
           </div>

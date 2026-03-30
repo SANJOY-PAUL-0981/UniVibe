@@ -10,7 +10,7 @@ export default async function MainLayout({ children }: MainLayoutProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppNav username={user.profile.username} name={user.name} />
+      <AppNav username={user.profile.username} name={user.name} imageUrl={user.profile.profilePicture} />
       {children}
     </div>
   );

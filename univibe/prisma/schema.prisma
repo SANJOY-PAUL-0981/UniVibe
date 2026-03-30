@@ -30,6 +30,7 @@ model Profile{
   updatedAt DateTime @updatedAt
 
   username  String   @unique
+  profilePicture String?
   gender    String   
   age       Int  
   pronouns  String?

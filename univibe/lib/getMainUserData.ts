@@ -21,6 +21,7 @@ const readMainUser = (userId: string) =>
       profile: {
         select: {
           username: true,
+          profilePicture: true,
           gender: true,
           age: true,
           pronouns: true,
