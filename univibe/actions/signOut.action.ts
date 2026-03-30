@@ -9,6 +9,5 @@ export const signOutAction = async() => {
         headers: await headers()
     })
 
-    redirect("/")
-    //redirect("/auth/login")
+    redirect("/auth/login")
 }

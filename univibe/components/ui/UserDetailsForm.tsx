@@ -362,7 +362,7 @@ const UserDetailsForm = () => {
                                         <Button
                                             disabled={loading}
                                             onClick={handleSubmit}
-                                            className="text-lg font-semibold">{loading ? "Submitting..." : "Submit"}</Button>
+                                            className="text-base font-semibold">{loading ? "Submitting..." : "Submit"}</Button>
                                     </div>
                                 </CardContent>
                             </Card>
