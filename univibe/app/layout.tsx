@@ -1,24 +1,15 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter, Nunito } from "next/font/google";
+import { Bricolage_Grotesque, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { Toaster } from "sonner";
+import ThemeToggle from "@/components/layouts/ThemeToggle";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const fontSans = Bricolage_Grotesque({ subsets: ["latin"], variable: "--font-bricolage" });
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const nunito = Nunito({
-  variable: "--font-nunito",
+const fontMono = JetBrains_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
 });
 
@@ -33,18 +24,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn("font-sans", inter.variable)} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={cn("font-sans", fontSans.variable, fontSans.className)}
+      suppressHydrationWarning
+    >
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${nunito.variable} antialiased`}
+        className={`${fontMono.variable} antialiased`}
       >
         <Toaster
         position="top-right" />
         <NextThemesProvider
           attribute="class"
-          defaultTheme="dark"
-          enableSystem
+          defaultTheme="light"
+          enableSystem={false}
           disableTransitionOnChange
         >
+          <ThemeToggle />
           {children}
         </NextThemesProvider>
       </body>
