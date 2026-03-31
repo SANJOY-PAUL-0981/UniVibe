@@ -6,9 +6,9 @@ import { useAnimateOnScroll } from "@/hooks/useAnimateOnScroll";
 import { usePathname } from "next/navigation";
 
 const navItems = [
-  { label: "Home",    href: "/home" },
+  { label: "Home", href: "/home" },
   { label: "Profile", href: "/profile" },
-  { label: "Room",    href: "/room" },
+  { label: "Room", href: "/room" },
 ];
 
 type Props = {
@@ -21,7 +21,6 @@ const AppNav = ({ username, name, imageUrl }: Props) => {
   const { ref, isVisible } = useAnimateOnScroll();
   const pathname = usePathname();
 
-
   const initials = username
     .split(/[\s_-]+/)
     .map((w) => w[0])
@@ -31,18 +30,19 @@ const AppNav = ({ username, name, imageUrl }: Props) => {
 
   return (
     <header ref={ref} className="px-4 pt-4 md:px-8">
-      <div className={`${isVisible ? "in-view" : ""} mx-auto h-24 max-w-7xl px-3`}>
+      <div
+        className={`${isVisible ? "in-view" : ""} mx-auto h-24 max-w-7xl px-3`}
+      >
         <div className="flex h-full items-center gap-5 md:gap-8">
-
           {/* Logo — same as Header */}
           <div className="flex items-center gap-2 text-4xl font-bold reveal-right">
-            <Image src="/logo.png" alt="Logo" width={60} height={46} className="shrink-0" />
-            <div className="leading-none">
-              <span className="text-chart-4">U</span>
-              <span className="text-chart-5">ni</span>
-              <span className="text-chart-4">V</span>
-              <span className="text-chart-5">ibe</span>
-            </div>
+            <Image
+              src="/logo.png"
+              alt="Logo"
+              width={250}
+              height={46}
+              className="shrink-0"
+            />
           </div>
 
           {/* Navbar */}
@@ -74,14 +74,19 @@ const AppNav = ({ username, name, imageUrl }: Props) => {
             <Link href="/profile">
               <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-chart-4 text-sm font-bold text-white ring-2 ring-border transition-all hover:ring-chart-4">
                 {imageUrl ? (
-                  <Image src={imageUrl} alt={`${name} profile image`} fill sizes="48px" className="object-cover" />
+                  <Image
+                    src={imageUrl}
+                    alt={`${name} profile image`}
+                    fill
+                    sizes="48px"
+                    className="object-cover"
+                  />
                 ) : (
                   initials
                 )}
               </div>
             </Link>
           </div>
-
         </div>
       </div>
     </header>

@@ -26,16 +26,10 @@ const Header = () => {
             <Image
               src="/logo.png"
               alt="Logo"
-              width={60}
+              width={250}
               height={46}
-              className="shrink-0"
+              className="shrink-0 dark:invert-0 invert"
             />
-            <div className="leading-none">
-              <span className="text-chart-4">U</span>
-              <span className="text-chart-5">ni</span>
-              <span className="text-chart-4">V</span>
-              <span className="text-chart-5">ibe</span>
-            </div>
           </div>
 
           <nav className="hidden flex-1 justify-center md:flex reveal-down">

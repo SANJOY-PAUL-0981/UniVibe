@@ -31,7 +31,7 @@ export default async function ProfilePage() {
 
                         {/* Sign out — top right */}
                         <form action={signOutAction} className="absolute right-6 top-6">
-                            <Button type="submit" variant="destructive" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground rounded-full">
+                            <Button type="submit" variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground rounded-full">
                                 <LogOut className="h-4 w-4" />
                                 Sign out
                             </Button>
