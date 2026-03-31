@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { toast } from "sonner"
-import { useRouter } from "next/navigation"
+import { useState, useRef, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import {
   Carousel,
   CarouselContent,
@@ -69,28 +69,30 @@ const MAX_HOBBIES = 5;
 const TOTAL_SLIDES = 3;
 
 const UserDetailsForm = () => {
-    const [api, setApi] = useState<CarouselApi>()
-    const [current, setCurrent] = useState(0)
+  const [api, setApi] = useState<CarouselApi>();
+  const [current, setCurrent] = useState(0);
 
-    const [selectedPronoun, setSelectedPronoun] = useState<string>("")
-    const [customPronoun, setCustomPronoun] = useState<string>("")
-    const isCustom = selectedPronoun === "other"
-    const [selectedHobbies, setSelectedHobbies] = useState<string[]>([])
-    const [hobbyInput, setHobbyInput] = useState<string>("")
-    const [isGender, setGender] = useState<string>("")
-    const availableHobbies = hobbyOptions.filter(h => !selectedHobbies.includes(h))
+  const [selectedPronoun, setSelectedPronoun] = useState<string>("");
+  const [customPronoun, setCustomPronoun] = useState<string>("");
+  const isCustom = selectedPronoun === "other";
+  const [selectedHobbies, setSelectedHobbies] = useState<string[]>([]);
+  const [hobbyInput, setHobbyInput] = useState<string>("");
+  const [isGender, setGender] = useState<string>("");
+  const availableHobbies = hobbyOptions.filter(
+    (h) => !selectedHobbies.includes(h),
+  );
 
-    const usernameRef = useRef<HTMLInputElement>(null)
-    const ageRef = useRef<HTMLInputElement>(null)
-    const universityRef = useRef<HTMLInputElement>(null)
-    const collegeRef = useRef<HTMLInputElement>(null)
-    const fieldOfStudyRef = useRef<HTMLInputElement>(null)
-    const semesterRef = useRef<HTMLInputElement>(null)
-    const referralSourceRef = useRef<HTMLInputElement>(null)
+  const usernameRef = useRef<HTMLInputElement>(null);
+  const ageRef = useRef<HTMLInputElement>(null);
+  const universityRef = useRef<HTMLInputElement>(null);
+  const collegeRef = useRef<HTMLInputElement>(null);
+  const fieldOfStudyRef = useRef<HTMLInputElement>(null);
+  const semesterRef = useRef<HTMLInputElement>(null);
+  const referralSourceRef = useRef<HTMLInputElement>(null);
 
-    const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
-    const router = useRouter()
+  const router = useRouter();
 
   const addHobby = (val: string) => {
     if (
@@ -107,109 +109,117 @@ const UserDetailsForm = () => {
     setSelectedHobbies((prev) => prev.filter((h) => h !== hobby));
   };
 
-    useEffect(() => {
-        if (!api) return
-        setCurrent(api.selectedScrollSnap())
-        api.on("select", () => setCurrent(api.selectedScrollSnap()))
-    }, [api])
+  useEffect(() => {
+    if (!api) return;
+    setCurrent(api.selectedScrollSnap());
+    api.on("select", () => setCurrent(api.selectedScrollSnap()));
+  }, [api]);
 
-    const handleSubmit = async () => {
-        try {
-            const body = {
-                username: usernameRef?.current?.value,
-                gender: isGender,
-                age: Number(ageRef?.current?.value),
-                pronouns: isCustom ? customPronoun : selectedPronoun,
-                university: universityRef?.current?.value,
-                college: collegeRef?.current?.value,
-                fieldOfStudy: fieldOfStudyRef?.current?.value,
-                semester: Number(semesterRef?.current?.value),
-                hobbies: selectedHobbies,
-                heardFrom: referralSourceRef?.current?.value,
-            }
-            console.log(body)
+  const handleSubmit = async () => {
+    try {
+      const body = {
+        username: usernameRef?.current?.value,
+        gender: isGender,
+        age: Number(ageRef?.current?.value),
+        pronouns: isCustom ? customPronoun : selectedPronoun,
+        university: universityRef?.current?.value,
+        college: collegeRef?.current?.value,
+        fieldOfStudy: fieldOfStudyRef?.current?.value,
+        semester: Number(semesterRef?.current?.value),
+        hobbies: selectedHobbies,
+        heardFrom: referralSourceRef?.current?.value,
+      };
+      console.log(body);
 
-            setLoading(true)
-            const res = await fetch("/api/users", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body)
-            })
+      setLoading(true);
+      const res = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
 
-            const data = await res.json()
+      const data = await res.json();
 
-            if (data.success === true) {
-                setLoading(false)
-                toast.success(data.message)
-                router.push("/profile")
-            } else {
-                setLoading(false)
-                if (data.errors) {
-                    const errors = data.errors as Record<string, string[]>
-                    const firstError = Object.values(errors)[0][0]
-                    toast.error(firstError)
-                } else {
-                    toast.error(data.message)
-                }
-            }
-        } catch {
-            toast.error("Something Went Wrong From client!")
+      if (data.success === true) {
+        setLoading(false);
+        toast.success(data.message);
+        router.push("/profile");
+      } else {
+        setLoading(false);
+        if (data.errors) {
+          const errors = data.errors as Record<string, string[]>;
+          const firstError = Object.values(errors)[0][0];
+          toast.error(firstError);
+        } else {
+          toast.error(data.message);
         }
+      }
+    } catch {
+      toast.error("Something Went Wrong From client!");
     }
+  };
 
-    return (
-        <div className="flex flex-col items-center justify-center w-full h-screen py-10">
-            <Carousel className="w-[35vw]" setApi={setApi}>
-                <CarouselContent className="flex items-center">
+  return (
+    <div className="flex flex-col items-center justify-center w-full h-screen py-10">
+      <Carousel className="w-[35vw]" setApi={setApi}>
+        <CarouselContent className="flex items-center">
+          {/*Personal Details*/}
+          <CarouselItem>
+            <div className="p-5">
+              <Card className="shadow-8xl backdrop-blur-3xl border">
+               <CardContent className="border-b border-border/70 p-6">
+                  <div className="flex flex-col gap-2 text-center">
+                    <p className="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
+                      Step 1 of 3
+                    </p>
+                    <div className="text-2xl font-semibold">Personal Details</div>
+                  </div>
+                </CardContent>
+                <CardContent className="flex flex-col gap-4 p-6">
+                  <div className="flex flex-col gap-1">
+                    <Label htmlFor="username">Username</Label>
+                    <Input
+                      id="username"
+                      type="text"
+                      name="username"
+                      ref={usernameRef}
+                      placeholder="johndoe1234"
+                      className="h-9"
+                    />
+                  </div>
 
-                    {/*Personal Details*/}
-                    <CarouselItem>
-                        <div className="p-5">
-                            <Card className="shadow-xl">
-                                <CardContent className="flex justify-center p-6">
-                                    <div className="text-2xl font-semibold">Personal Details</div>
-                                </CardContent>
-                                <CardContent className="flex flex-col gap-4 pb-6">
-                                    <div className="flex flex-col gap-1">
-                                        <Label htmlFor="username">Username</Label>
-                                        <Input
-                                            id="username"
-                                            type="text"
-                                            name="username"
-                                            ref={usernameRef}
-                                            placeholder="johndoe1234"
-                                            className="h-9" />
-                                    </div>
-
-                                    <div className="flex gap-4">
-                                        <div className="flex flex-col gap-1 flex-1">
-                                            <Label htmlFor="gender">Gender</Label>
-                                            <Select onValueChange={(val) => setGender(val as string)}>
-                                                <SelectTrigger className="w-full">
-                                                    <SelectValue placeholder="Select gender" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectGroup>
-                                                        <SelectLabel>Genders</SelectLabel>
-                                                        <SelectItem value="male">Male</SelectItem>
-                                                        <SelectItem value="female">Female</SelectItem>
-                                                        <SelectItem value="non-binary">Non-binary</SelectItem>
-                                                        <SelectItem value="other">Other</SelectItem>
-                                                    </SelectGroup>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <div className="flex flex-col gap-1 w-24">
-                                            <Label htmlFor="age">Age</Label>
-                                            <Input
-                                                id="age"
-                                                type="number"
-                                                name="age"
-                                                ref={ageRef}
-                                                placeholder="21"
-                                                className="h-9" />
-                                        </div>
-                                    </div>
+                  <div className="flex gap-4">
+                    <div className="flex flex-col gap-1 flex-1">
+                      <Label htmlFor="gender">Gender</Label>
+                      <Select onValueChange={(val) => setGender(val as string)}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Genders</SelectLabel>
+                            <SelectItem value="male">Male</SelectItem>
+                            <SelectItem value="female">Female</SelectItem>
+                            <SelectItem value="non-binary">
+                              Non-binary
+                            </SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex flex-col gap-1 w-24">
+                      <Label htmlFor="age">Age</Label>
+                      <Input
+                        id="age"
+                        type="number"
+                        name="age"
+                        ref={ageRef}
+                        placeholder="21"
+                        className="h-9"
+                      />
+                    </div>
+                  </div>
 
                   <div className="flex flex-col gap-1">
                     <Label htmlFor="pronouns">Pronouns</Label>
@@ -249,63 +259,72 @@ const UserDetailsForm = () => {
             </div>
           </CarouselItem>
 
-                    {/*Education Details*/}
-                    <CarouselItem>
-                        <div className="p-8">
-                            <Card className="shadow-xl">
-                                <CardContent className="flex justify-center p-6">
-                                    <div className="text-2xl font-semibold">Education Details</div>
-                                </CardContent>
-                                <CardContent className="flex flex-col gap-4 pb-6">
-                                    <div className="flex flex-col gap-1">
-                                        <Label htmlFor="university">University</Label>
-                                        <Input
-                                            id="university"
-                                            type="text"
-                                            name="university"
-                                            ref={universityRef}
-                                            placeholder="e.g. MIT"
-                                            className="h-9" />
-                                    </div>
-                                    <div className="flex flex-col gap-1">
-                                        <Label htmlFor="college">College</Label>
-                                        <Input
-                                            id="college"
-                                            type="text"
-                                            name="college"
-                                            ref={collegeRef}
-                                            placeholder="e.g. School of Engineering"
-                                            className="h-9" />
-                                    </div>
-                                    <div className="flex flex-col gap-1">
-                                        <Label htmlFor="field">Field of Study</Label>
-                                        <Input
-                                            id="field"
-                                            type="text"
-                                            name="field"
-                                            ref={fieldOfStudyRef}
-                                            placeholder="e.g. Computer Science"
-                                            className="h-9" />
-                                    </div>
-                                    <div className="flex flex-col gap-1">
-                                        <Label htmlFor="semester">Semester</Label>
-                                        <Input
-                                            id="semester"
-                                            type="number"
-                                            name="semester"
-                                            ref={semesterRef}
-                                            placeholder="e.g. 4"
-                                            className="h-9" />
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </div>
-                    </CarouselItem>
+          {/*Education Details*/}
+          <CarouselItem>
+            <div className="p-4 sm:p-8">
+              <Card className="shadow-8xl backdrop-blur-3xl border">
+                <CardContent className="border-b border-border/70 p-6">
+                  <div className="flex flex-col gap-2 text-center">
+                    <p className="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
+                      Step 2 of 3
+                    </p>
+                    <div className="text-2xl font-semibold">Educational Details</div>
+                  </div>
+                </CardContent>
+                <CardContent className="flex flex-col gap-4 p-6">
+                  <div className="flex flex-col gap-1">
+                    <Label htmlFor="university">University</Label>
+                    <Input
+                      id="university"
+                      type="text"
+                      name="university"
+                      ref={universityRef}
+                      placeholder="e.g. MIT"
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <Label htmlFor="college">College</Label>
+                    <Input
+                      id="college"
+                      type="text"
+                      name="college"
+                      ref={collegeRef}
+                      placeholder="e.g. School of Engineering"
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <Label htmlFor="field">Field of Study</Label>
+                    <Input
+                      id="field"
+                      type="text"
+                      name="field"
+                      ref={fieldOfStudyRef}
+                      placeholder="e.g. Computer Science"
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <Label htmlFor="semester">Semester</Label>
+                    <Input
+                      id="semester"
+                      type="number"
+                      name="semester"
+                      ref={semesterRef}
+                      placeholder="e.g. 4"
+                      className="h-9"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </CarouselItem>
 
           {/*Miscellaneous*/}
           <CarouselItem>
-            <div className="p-4 sm:p-6">
-              <Card className="border border-border/70 bg-card shadow-xl">
+            <div className="p-4 sm:p-8">
+              <Card className="shadow-8xl backdrop-blur-3xl border">
                 <CardContent className="border-b border-border/70 p-6">
                   <div className="flex flex-col gap-2 text-center">
                     <p className="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
@@ -383,37 +402,41 @@ const UserDetailsForm = () => {
                     )}
                   </div>
 
-                                    <div className="flex flex-col gap-1">
-                                        <Label htmlFor="referral">Where did you hear about us?</Label>
-                                        <Input
-                                            id="referral"
-                                            type="text"
-                                            name="referral"
-                                            placeholder="e.g. Twitter, friend, Google..."
-                                            ref={referralSourceRef}
-                                            //onChange={(e) => setReferralSource(e.target.value)}
-                                            className="h-9"
-                                        />
-                                    </div>
+                  <div className="flex flex-col gap-1">
+                    <Label htmlFor="referral">
+                      Where did you hear about us?
+                    </Label>
+                    <Input
+                      id="referral"
+                      type="text"
+                      name="referral"
+                      placeholder="e.g. Twitter, friend, Google..."
+                      ref={referralSourceRef}
+                      //onChange={(e) => setReferralSource(e.target.value)}
+                      className="h-9"
+                    />
+                  </div>
 
-                                    <div className="flex flex-col gap-1">
-                                        <Button
-                                            disabled={loading}
-                                            onClick={handleSubmit}
-                                            className="text-base font-semibold">{loading ? "Submitting..." : "Submit"}</Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </div>
-                    </CarouselItem>
-
-                </CarouselContent>
-                <CarouselPrevious />
-                <CarouselNext />
-            </Carousel>
+                  <div className="flex flex-col gap-1">
+                    <Button
+                      disabled={loading}
+                      onClick={handleSubmit}
+                      className="text-base font-semibold"
+                    >
+                      {loading ? "Submitting..." : "Submit"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </CarouselItem>
+        </CarouselContent>
+        <CarouselPrevious />
+        <CarouselNext />
+      </Carousel>
 
       {/* Dot indicators VIBCODED*/}
-      <div className="mt-3 flex items-center gap-2 rounded-full border border-border/70 bg-card px-3 py-2">
+      <div className="mt-1 flex items-center gap-2 px-3 py-2">
         {Array.from({ length: TOTAL_SLIDES }).map((_, i) => (
           <button
             key={i}
