@@ -41,7 +41,7 @@ const AppNav = ({ username, name, imageUrl }: Props) => {
               alt="Logo"
               width={250}
               height={46}
-              className="shrink-0"
+              className="shrink-0 invert dark:invert-0"
             />
           </div>
 

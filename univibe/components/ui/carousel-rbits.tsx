@@ -79,7 +79,7 @@ function CarouselItem({ item, index, itemWidth, round, trackItemOffset, x, trans
       key={`${item?.id ?? index}-${index}`}
       className={`relative shrink-0 flex flex-col ${round
           ? 'items-center justify-center text-center bg-[#060010] border-0'
-          : 'items-start justify-between bg-[#222] border border-[#222] rounded-[12px]'
+          : 'items-start justify-between bg-[#222] border border-[#222] rounded-sm'
         } overflow-hidden cursor-grab active:cursor-grabbing`}
       style={{
         width: itemWidth,
