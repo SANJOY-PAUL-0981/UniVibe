@@ -37,6 +37,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Span } from "next/dist/trace";
 
 const pronounOptions = [
   "he/him",
@@ -167,12 +168,14 @@ const UserDetailsForm = () => {
           <CarouselItem>
             <div className="p-5">
               <Card className="shadow-8xl backdrop-blur-3xl border">
-               <CardContent className="border-b border-border/70 p-6">
+                <CardContent className="border-b border-border/70 p-6">
                   <div className="flex flex-col gap-2 text-center">
                     <p className="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
                       Step 1 of 3
                     </p>
-                    <div className="text-2xl font-semibold">Personal Details</div>
+                    <div className="text-2xl font-semibold">
+                      Personal Details
+                    </div>
                   </div>
                 </CardContent>
                 <CardContent className="flex flex-col gap-4 p-6">
@@ -268,7 +271,9 @@ const UserDetailsForm = () => {
                     <p className="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
                       Step 2 of 3
                     </p>
-                    <div className="text-2xl font-semibold">Educational Details</div>
+                    <div className="text-2xl font-semibold">
+                      Educational Details
+                    </div>
                   </div>
                 </CardContent>
                 <CardContent className="flex flex-col gap-4 p-6">
@@ -423,7 +428,11 @@ const UserDetailsForm = () => {
                       onClick={handleSubmit}
                       className="text-base font-semibold"
                     >
-                      {loading ? "Submitting..." : "Submit"}
+                      {loading ? (
+                        <span className="animate-pulse">Submitting...</span>
+                      ) : (
+                        "Submit"
+                      )}
                     </Button>
                   </div>
                 </CardContent>
