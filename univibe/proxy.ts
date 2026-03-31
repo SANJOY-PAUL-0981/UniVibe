@@ -1,7 +1,7 @@
 import { getSessionCookie } from "better-auth/cookies";
 import { NextRequest, NextResponse } from "next/server";
 
-const protectedRoutes = ["/profile", "/user-details"]
+const protectedRoutes = ["/home", "/profile", "/room", "/user-details"]
 
 export async function proxy (req: NextRequest) {
     const { nextUrl } = req
@@ -10,7 +10,9 @@ export async function proxy (req: NextRequest) {
     const res = NextResponse.next()
 
     const isLoggedIn = !!sessionCookie
-    const isOnProtectedRoute = protectedRoutes.includes(nextUrl.pathname)
+    const isOnProtectedRoute = protectedRoutes.some((route) =>
+        nextUrl.pathname === route || nextUrl.pathname.startsWith(`${route}/`)
+    )
     const isOnAuthRoute = nextUrl.pathname.startsWith("/auth") && nextUrl.pathname !== "/auth/callback"
 
     console.log("middleware:", req.nextUrl.pathname)// middleware debugging
