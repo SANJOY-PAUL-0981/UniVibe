@@ -4,6 +4,43 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*if u wanna go back to last mode the remove this*/
+  /*::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }*/
+  
+/*if u wanna go back to last mode the remove this*/
+@supports (view-transition-name: none) {
+  .theme-transition::view-transition-group(root) {
+    animation-timing-function: var(--expo-out);
+  }
+
+  .theme-transition::view-transition-new(root) {
+    mask: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><filter id="blur"><feGaussianBlur stdDeviation="2"/></filter></defs><circle cx="40" cy="0" r="18" fill="white" filter="url(%23blur)"/></svg>') top right / 0 no-repeat;
+    mask-origin: content-box;
+    animation: scale 1s;
+    animation-fill-mode: both;
+    transform-origin: top right;
+  }
+
+  .theme-transition::view-transition-old(root),
+  .theme-transition.dark::view-transition-old(root) {
+    animation: scale 1s;
+    animation-fill-mode: both;
+    transform-origin: top right;
+    z-index: -1;
+  }
+
+  @keyframes scale {
+    to {
+      mask-size: 350vmax;
+    }
+  }
+}
+
+
 :root {
     --background: oklch(0.9924 0.0028 308.4292);
     --foreground: oklch(0.1288 0.0219 314.0129);
