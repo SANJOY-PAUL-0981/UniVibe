@@ -18,7 +18,7 @@ const AuthCallbackPage = async () => {
         }
     })
 
-    redirect(profile ? "/profile" : "/user-details")
+    redirect(profile ? "/home" : "/user-details")
 }
 
 export default AuthCallbackPage;
