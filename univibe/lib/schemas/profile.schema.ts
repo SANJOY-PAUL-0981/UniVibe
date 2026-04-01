@@ -29,14 +29,14 @@ const PersonalDetails = z.object({
 const EducationalDetails = z.object({
   university: z
     .string()
-    .min(3, { message: "University name too short" })
+    .min(2, { message: "University name too short" })
     .max(100),
 
   college: z.string().min(3, { message: "College name too short" }).max(100),
 
   fieldOfStudy: z
     .string()
-    .min(3, { message: "Field of study too short" })
+    .min(2, { message: "Field of study too short" })
     .max(100),
 
   semester: z
