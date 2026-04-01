@@ -21,8 +21,52 @@ export default function ThemeToggle() {
   const activeTheme = theme === "system" ? resolvedTheme : theme;
   const isDark = activeTheme === "dark";
 
-  const toggleTheme = () => {
+  const switchTheme = () => {
     setTheme(isDark ? "light" : "dark");
+  }
+
+  const toggleTheme = (event: any) => {
+    // setTheme(isDark ? "light" : "dark");
+
+    // new with view-transition implementation
+    if (!document.startViewTransition) {
+      //setTheme(isDark ? "light" : "dark");
+      switchTheme()
+      return
+    }
+
+    /*const x = event.clientX;
+    const y = event.clientY;
+    const endRadius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y)
+    );*/
+
+    const root = document.documentElement;
+    root.classList.add("theme-transition");
+
+    const transition = document.startViewTransition(switchTheme);
+    transition.finished.finally(() => {
+      root.classList.remove("theme-transition");
+    });
+
+    /*transition.ready.then(() => {
+      requestAnimationFrame(() => {
+        document.documentElement.animate(
+          {
+            clipPath: [
+              `circle(0px at ${x}px ${y}px)`,
+              `circle(${endRadius}px at ${x}px ${y}px)`,
+            ],
+          },
+          {
+            duration: 600,
+            easing: 'ease-in-out',
+            pseudoElement: '::view-transition-new(root)'
+          }
+        )
+      })
+    })*/
   };
 
   return (
