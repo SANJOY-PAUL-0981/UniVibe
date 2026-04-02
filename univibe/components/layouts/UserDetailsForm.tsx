@@ -127,6 +127,7 @@ const UserDetailsForm = () => {
         college: collegeRef?.current?.value,
         fieldOfStudy: fieldOfStudyRef?.current?.value,
         semester: Number(semesterRef?.current?.value),
+        year: Number(yearRef?.current?.value),
         hobbies: selectedHobbies,
         heardFrom: referralSourceRef?.current?.value,
       };
@@ -144,7 +145,7 @@ const UserDetailsForm = () => {
       if (data.success === true) {
         setLoading(false);
         toast.success(data.message);
-        router.push("/profile");
+        router.push("/home");
       } else {
         setLoading(false);
         if (data.errors) {
@@ -219,6 +220,8 @@ const UserDetailsForm = () => {
                         name="age"
                         ref={ageRef}
                         placeholder="21"
+                        min={1}
+                        max={100}
                         className="h-9"
                       />
                     </div>
@@ -310,19 +313,21 @@ const UserDetailsForm = () => {
                       className="h-9"
                     />
                   </div>
-                  <div className="flex gap-4">
-                  <div className="flex flex-col gap-1">
-                    <Label htmlFor="semester">Year</Label>
+                  <div className="flex w-full gap-4">
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <Label htmlFor="year">Year</Label>
                     <Input
                       id="year"
                       type="number"
                       name="year"
                       ref={yearRef}
                       placeholder="e.g. 4"
+                      min={1}
+                      max={4}
                       className="h-9"
                     />
                   </div>
-                  <div className="flex flex-col gap-1">
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
                     <Label htmlFor="semester">Semester</Label>
                     <Input
                       id="semester"
@@ -330,6 +335,8 @@ const UserDetailsForm = () => {
                       name="semester"
                       ref={semesterRef}
                       placeholder="e.g. 4"
+                      min={1}
+                      max={8}
                       className="h-9"
                     />
                   </div>
