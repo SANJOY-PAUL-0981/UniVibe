@@ -24,32 +24,6 @@ model User {
   @@map("users")
 }
 
-model Profile{
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  username       String   @unique
-  profilePicture String?
-  gender         String   
-  age            Int  
-  pronouns       String?
-
-  university   String
-  college      String
-  fieldOfStudy  String
-  semester     Int 
-
-  hobbies   String[]
-  heardFrom String
-
-  userId String  @unique   
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("profiles")
-
-}
-
 model Session {
   id        String   @id
   createdAt DateTime @default(now())
@@ -100,4 +74,68 @@ model Verification {
 
   @@index([identifier])
   @@map("verifications")
+}
+
+model Profile {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  username       String  @unique
+  profilePicture String?
+  gender         String
+  age            Int
+  pronouns       String?
+
+  university   String
+  college      String
+  fieldOfStudy String
+  semester     Int
+  year         Int
+
+  hobbies   String[]
+  heardFrom String
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  waitingUser        WaitingUser?
+  callSessionAsUser1 CallSession[] @relation("CallUser1")
+  callSessionAsUser2 CallSession[] @relation("CallUser2")
+
+  @@map("profiles")
+}
+
+model WaitingUser {
+  id        String @id @default(cuid())
+  profileId String @unique
+  socketId  String
+
+  filterByGender       Boolean @default(false)
+  filterByCollege      Boolean @default(false)
+  filterByUniversity   Boolean @default(false)
+  filterByFieldOfStudy Boolean @default(false)
+  filterByYear         Boolean @default(false)
+
+  currentDomain Int @default(0) //0 = college | 1 = uni | 2 = fieldofStudy | 3 = random
+
+  createdAt DateTime @default(now())
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@map("waitingUser")
+}
+
+model CallSession {
+  id         String @id @default(cuid())
+  profile1Id String @unique
+  profile2Id String @unique
+
+  roomId    String   @unique @default(cuid())
+  startedAt DateTime @default(now())
+
+  profile1 Profile @relation("CallUser1", fields: [profile1Id], references: [id])
+  profile2 Profile @relation("CallUser2", fields: [profile2Id], references: [id])
+
+  @@map("callSession")
 }
