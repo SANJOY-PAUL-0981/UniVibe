@@ -33,7 +33,7 @@ const HeroSection = () => {
           size="lg"
           className="mt-10 h-14 rounded-full px-9 text-lg font-extrabold tracking-tight reveal-pop reveal-delay-4"
         >
-          Sign Up
+          Create Your Account
         </Button>
         </Link>
       </div>

@@ -37,7 +37,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Span } from "next/dist/trace";
 
 const pronounOptions = [
   "he/him",
@@ -89,6 +88,7 @@ const UserDetailsForm = () => {
   const collegeRef = useRef<HTMLInputElement>(null);
   const fieldOfStudyRef = useRef<HTMLInputElement>(null);
   const semesterRef = useRef<HTMLInputElement>(null);
+  const yearRef = useRef<HTMLInputElement>(null);
   const referralSourceRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(false);
@@ -310,6 +310,18 @@ const UserDetailsForm = () => {
                       className="h-9"
                     />
                   </div>
+                  <div className="flex gap-4">
+                  <div className="flex flex-col gap-1">
+                    <Label htmlFor="semester">Year</Label>
+                    <Input
+                      id="year"
+                      type="number"
+                      name="year"
+                      ref={yearRef}
+                      placeholder="e.g. 4"
+                      className="h-9"
+                    />
+                  </div>
                   <div className="flex flex-col gap-1">
                     <Label htmlFor="semester">Semester</Label>
                     <Input
@@ -320,6 +332,7 @@ const UserDetailsForm = () => {
                       placeholder="e.g. 4"
                       className="h-9"
                     />
+                  </div>
                   </div>
                 </CardContent>
               </Card>

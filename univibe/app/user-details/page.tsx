@@ -1,4 +1,4 @@
-import UserDetailsForm from "@/components/ui/UserDetailsForm"
+import UserDetailsForm from "@/components/layouts/UserDetailsForm"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
