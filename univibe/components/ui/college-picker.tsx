@@ -9,8 +9,10 @@ import { CheckIcon, ChevronsUpDown, PlusCircle } from "lucide-react";
 
 const colleges = collegeList as string[];
 
+// Fuse performs the fuzzy score calculation internally using these knobs.
+// `threshold` is the main strictness control: lower = stricter matches.
 const fuse = new Fuse(colleges, {
-  threshold: 0.3,
+  threshold: 0.18,
   distance: 100,
   minMatchCharLength: 3,
   shouldSort: true,
@@ -29,6 +31,9 @@ function search(query: string, limit = 10): string[] {
 
   if (exactMatches.length >= limit) return exactMatches;
 
+  // This call is where fuzzy matching is evaluated and scored.
+  // Fuse returns ranked results based on its internal edit-distance model
+  // and the configuration above (especially `threshold` and `distance`).
   const fuzzyResults = fuse
     .search(q, { limit: limit * 2 })
     .map((r) => r.item)
@@ -139,7 +144,7 @@ export function CollegePicker({
       {/* Dropdown — fixed to input width, scrollable, won't overflow card */}
       {open && (
         <div
-          className="absolute left-0 right-0 z-[999] mt-1 rounded-md border border-border bg-popover shadow-lg"
+          className="absolute left-0 right-0 z-999 mt-1 rounded-md border border-border bg-popover shadow-lg"
           style={{ maxHeight: "180px", overflowY: "auto" }}
         >
           <ul role="listbox" className="py-1">

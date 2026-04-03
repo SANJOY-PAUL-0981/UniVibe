@@ -87,7 +87,7 @@ model Profile {
   age            Int
   pronouns       String?
 
-  university   String
+  university   String?
   college      String
   fieldOfStudy String
   semester     Int

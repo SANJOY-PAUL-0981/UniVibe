@@ -10,26 +10,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { CollegePicker } from "@/components/ui/college-picker";
 import { cn } from "@/lib/utils";
 
 const FILTER_OPTIONS = {
     filterByGender: ["male", "female"],
-    filterByCollege: [
-        "engineering",
-        "business",
-        "medicine",
-        "arts",
-        "law",
-        "science",
-    ],
-    filterByUniversity: [
-        "mit",
-        "stanford",
-        "harvard",
-        "oxford",
-        "cambridge",
-        "iit",
-    ],
     filterByFieldOfStudy: [
         "computer-science",
         "electrical-engineering",
@@ -51,7 +36,6 @@ type FilterValue = {
 type Filters = {
     filterByGender: FilterValue;
     filterByCollege: FilterValue;
-    filterByUniversity: FilterValue;
     filterByFieldOfStudy: FilterValue;
     filterByYear: FilterValue;
 };
@@ -77,16 +61,9 @@ const FILTER_META: {
         {
             key: "filterByCollege",
             id: "fc",
-            label: "College",
-            description: "Match a specific college",
+            label: "University/College",
+            description: "Match a specific university/college",
             placeholder: "Choose college",
-        },
-        {
-            key: "filterByUniversity",
-            id: "fu",
-            label: "University",
-            description: "Match a specific university",
-            placeholder: "Choose university",
         },
         {
             key: "filterByFieldOfStudy",
@@ -108,10 +85,6 @@ export function MatchFilterPanel({ onValidityChange }: Props) {
     const [filters, setFilters] = useState<Filters>({
         filterByGender: { enabled: false, value: "" },
         filterByCollege: {
-            enabled: false,
-            value: "",
-        },
-        filterByUniversity: {
             enabled: false,
             value: "",
         },
@@ -164,6 +137,7 @@ export function MatchFilterPanel({ onValidityChange }: Props) {
                             value={filterState.value}
                             options={options}
                             placeholder={item.placeholder}
+                            useCollegePicker={item.key === "filterByCollege"}
                             onToggle={() => toggle(item.key)}
                             onChange={(value) => setValue(item.key, value)}
                         />
@@ -190,6 +164,7 @@ function FilterCard({
     value,
     options,
     placeholder,
+    useCollegePicker,
     onToggle,
     onChange,
 }: {
@@ -200,6 +175,7 @@ function FilterCard({
     value: string;
     options: readonly string[];
     placeholder: string;
+    useCollegePicker?: boolean;
     onToggle: () => void;
     onChange: (value: string) => void;
 }) {
@@ -221,21 +197,29 @@ function FilterCard({
                     enabled ? "opacity-100" : "pointer-events-none opacity-45",
                 )}
             >
-                <Select
-                    value={value}
-                    onValueChange={(nextValue) => onChange(nextValue ?? "")}
-                >
-                    <SelectTrigger className="h-9 text-sm">
-                        <SelectValue placeholder={placeholder} />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {options.map((option) => (
-                            <SelectItem key={option} value={option}>
-                                {option}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
+                {useCollegePicker ? (
+                    <CollegePicker
+                        value={value}
+                        onChange={onChange}
+                        placeholder={placeholder}
+                    />
+                ) : (
+                    <Select
+                        value={value}
+                        onValueChange={(nextValue) => onChange(nextValue ?? "")}
+                    >
+                        <SelectTrigger className="h-9 text-sm">
+                            <SelectValue placeholder={placeholder} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {options.map((option) => (
+                                <SelectItem key={option} value={option}>
+                                    {option}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                )}
             </div>
         </div>
     );

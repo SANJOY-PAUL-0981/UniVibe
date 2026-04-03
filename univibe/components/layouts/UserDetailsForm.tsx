@@ -86,8 +86,6 @@ const UserDetailsForm = () => {
 
   const usernameRef = useRef<HTMLInputElement>(null);
   const ageRef = useRef<HTMLInputElement>(null);
-  const universityRef = useRef<HTMLInputElement>(null);
-  const collegeRef = useRef<HTMLInputElement>(null);
   const fieldOfStudyRef = useRef<HTMLInputElement>(null);
   const semesterRef = useRef<HTMLInputElement>(null);
   const yearRef = useRef<HTMLInputElement>(null);
@@ -125,7 +123,6 @@ const UserDetailsForm = () => {
         gender: isGender,
         age: Number(ageRef?.current?.value),
         pronouns: isCustom ? customPronoun : selectedPronoun,
-        university: universityRef?.current?.value,
         college: selectedCollege,
         fieldOfStudy: fieldOfStudyRef?.current?.value,
         semester: Number(semesterRef?.current?.value),
@@ -282,19 +279,9 @@ const UserDetailsForm = () => {
                   </div>
                 </CardContent>
                 <CardContent className="flex flex-col gap-4 p-6">
+                  
                   <div className="flex flex-col gap-1">
-                    <Label htmlFor="university">University</Label>
-                    <Input
-                      id="university"
-                      type="text"
-                      name="university"
-                      ref={universityRef}
-                      placeholder="e.g. MIT"
-                      className="h-9"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <Label htmlFor="college">College</Label>
+                    <Label htmlFor="college">University/College</Label>
                     <CollegePicker
                       value={selectedCollege}
                       onChange={setSelectedCollege}
