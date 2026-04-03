@@ -87,11 +87,10 @@ model Profile {
   age            Int
   pronouns       String?
 
-  university   String
   college      String
   fieldOfStudy String
   semester     Int
-  year         Int?
+  year         Int
 
   hobbies   String[]
   heardFrom String
@@ -111,13 +110,16 @@ model WaitingUser {
   profileId String @unique
   socketId  String
 
-  filterByGender       Boolean @default(false)
-  filterByCollege      Boolean @default(false)
-  filterByUniversity   Boolean @default(false)
-  filterByFieldOfStudy Boolean @default(false)
-  filterByYear         Boolean @default(false)
+  filterByGender         Boolean @default(false)
+  filterGenderData       String?
+  filterByCollege        Boolean @default(false)
+  filterCollegeData      String?
+  filterByFieldOfStudy   Boolean @default(false)
+  filterFieldOfStudyData String?
+  filterByYear           Boolean @default(false)
+  filterYearData         Int?
 
-  currentDomain Int @default(0) //0 = college | 1 = uni | 2 = fieldofStudy | 3 = random
+  currentDomain Int @default(0) //0 = college | 2 = fieldofStudy | 3 = random
 
   createdAt DateTime @default(now())
 
@@ -133,6 +135,26 @@ model CallSession {
 
   roomId    String   @unique @default(cuid())
   startedAt DateTime @default(now())
+
+  p1FilterByGender         Boolean @default(false)
+  p1FilterGenderData       String?
+  p1FilterByCollege        Boolean @default(false)
+  p1FilterCollegeData      String?
+  p1FilterByFieldOfStudy   Boolean @default(false)
+  p1FilterFieldOfStudyData String?
+  p1FilterByYear           Boolean @default(false)
+  p1FilterYearData         Int?
+  p1CurrentDomain          Int     @default(0)
+
+  p2FilterByGender         Boolean @default(false)
+  p2FilterGenderData       String?
+  p2FilterByCollege        Boolean @default(false)
+  p2FilterCollegeData      String?
+  p2FilterByFieldOfStudy   Boolean @default(false)
+  p2FilterFieldOfStudyData String?
+  p2FilterByYear           Boolean @default(false)
+  p2FilterYearData         Int?
+  p2CurrentDomain          Int     @default(0)
 
   profile1 Profile @relation("CallUser1", fields: [profile1Id], references: [id])
   profile2 Profile @relation("CallUser2", fields: [profile2Id], references: [id])
