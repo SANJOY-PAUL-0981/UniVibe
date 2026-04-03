@@ -112,7 +112,11 @@ const LoginPage = () => {
                 type="submit"
                 size="lg"
                 disabled={pendingAction !== null}
-                className="h-11 w-full rounded-xl"
+                className={`h-11 w-full rounded-xl ${
+                  pendingAction === "email"
+                    ? "cursor-progress disabled:pointer-events-auto"
+                    : "cursor-pointer disabled:pointer-events-auto disabled:cursor-not-allowed"
+                }`}
               >
                 <span
                   className={`${pendingAction === "email" ? "animate-pulse" : ""}`}
@@ -134,7 +138,11 @@ const LoginPage = () => {
                 onClick={handleClick}
                 variant="outline"
                 size="lg"
-                className="h-11 w-full rounded-xl"
+                className={`h-11 w-full rounded-xl ${
+                  pendingAction === "google"
+                    ? "cursor-progress disabled:pointer-events-auto"
+                    : "cursor-pointer disabled:pointer-events-auto disabled:cursor-not-allowed"
+                }`}
               >
                 <FcGoogle className="mr-2 size-4" />
                 <span

@@ -19,6 +19,7 @@ type CarouselProps = {
   plugins?: CarouselPlugin
   orientation?: "horizontal" | "vertical"
   setApi?: (api: CarouselApi) => void
+  disableArrowKeys?: boolean
 }
 
 type CarouselContextProps = {
@@ -47,6 +48,7 @@ function Carousel({
   opts,
   setApi,
   plugins,
+  disableArrowKeys = false,
   className,
   children,
   ...props
@@ -77,6 +79,8 @@ function Carousel({
 
   const handleKeyDown = React.useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (disableArrowKeys) return
+
       if (event.key === "ArrowLeft") {
         event.preventDefault()
         scrollPrev()
@@ -85,7 +89,7 @@ function Carousel({
         scrollNext()
       }
     },
-    [scrollPrev, scrollNext]
+    [disableArrowKeys, scrollPrev, scrollNext]
   )
 
   React.useEffect(() => {
