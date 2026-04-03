@@ -25,7 +25,6 @@ const readMainUser = (userId: string) =>
           gender: true,
           age: true,
           pronouns: true,
-          university: true,
           college: true,
           fieldOfStudy: true,
           semester: true,
