@@ -11,8 +11,6 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
   type CarouselApi,
 } from "@/components/ui/carousel";
 
@@ -38,7 +36,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const pronounOptions = [
@@ -83,15 +81,15 @@ const UserDetailsForm = () => {
   const [isGender, setGender] = useState<string>("");
   const [selectedCollege, setSelectedCollege] = useState<string>("");
   const [selectedCourse, setSelectedCourse] = useState<string>("");
+  const [selectedYear, setSelectedYear] = useState<string>("");
+  const [selectedSemester, setSelectedSemester] = useState<string>("");
+  const [heardFrom, setHeardFrom] = useState<string>("");
   const availableHobbies = hobbyOptions.filter(
     (h) => !selectedHobbies.includes(h),
   );
 
   const usernameRef = useRef<HTMLInputElement>(null);
   const ageRef = useRef<HTMLInputElement>(null);
-  const semesterRef = useRef<HTMLInputElement>(null);
-  const yearRef = useRef<HTMLInputElement>(null);
-  const referralSourceRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(false);
 
@@ -118,7 +116,51 @@ const UserDetailsForm = () => {
     api.on("select", () => setCurrent(api.selectedScrollSnap()));
   }, [api]);
 
+  const canGoNext = () => {
+    if (current === 0) {
+      const username = usernameRef.current?.value?.trim();
+      const age = Number(ageRef.current?.value);
+      const gender = isGender.trim();
+      const pronouns =
+        selectedPronoun === "other"
+          ? customPronoun.trim()
+          : selectedPronoun.trim();
+
+      return Boolean(username && age > 0 && gender && pronouns);
+    }
+
+    if (current === 1) {
+      const college = selectedCollege.trim();
+      const course = selectedCourse.trim();
+      const year = Number(selectedYear);
+      const semester = Number(selectedSemester);
+
+      return Boolean(college && course && year > 0 && semester > 0);
+    }
+
+    return false;
+  };
+
+  const canSubmit = () => {
+    return selectedHobbies.length > 0 && heardFrom.trim().length > 0;
+  };
+
+  const goBack = () => {
+    api?.scrollPrev();
+  };
+
+  const goNext = () => {
+    if (canGoNext()) {
+      api?.scrollNext();
+    }
+  };
+
   const handleSubmit = async () => {
+    if (!canSubmit()) {
+      toast.error("Please add at least one hobby and tell us where you heard about us.");
+      return;
+    }
+
     try {
       const body = {
         username: usernameRef?.current?.value,
@@ -127,12 +169,11 @@ const UserDetailsForm = () => {
         pronouns: isCustom ? customPronoun : selectedPronoun,
         college: selectedCollege,
         fieldOfStudy: selectedCourse,
-        semester: Number(semesterRef?.current?.value),
-        year: Number(yearRef?.current?.value),
+        semester: Number(selectedSemester),
+        year: Number(selectedYear),
         hobbies: selectedHobbies,
-        heardFrom: referralSourceRef?.current?.value,
+        heardFrom,
       };
-      console.log(body);
 
       setLoading(true);
       const res = await fetch("/api/users", {
@@ -164,7 +205,7 @@ const UserDetailsForm = () => {
 
   return (
     <div className="flex flex-col items-center justify-center w-full h-screen py-10">
-      <Carousel className="w-[35vw]" setApi={setApi}>
+      <Carousel className="w-[35vw]" setApi={setApi} disableArrowKeys>
         <CarouselContent className="flex items-center">
           {/*Personal Details*/}
           <CarouselItem>
@@ -307,7 +348,8 @@ const UserDetailsForm = () => {
                         id="year"
                         type="number"
                         name="year"
-                        ref={yearRef}
+                        value={selectedYear}
+                        onChange={(e) => setSelectedYear(e.target.value)}
                         placeholder="e.g. 4"
                         min={1}
                         max={4}
@@ -320,7 +362,8 @@ const UserDetailsForm = () => {
                         id="semester"
                         type="number"
                         name="semester"
-                        ref={semesterRef}
+                        value={selectedSemester}
+                        onChange={(e) => setSelectedSemester(e.target.value)}
                         placeholder="e.g. 4"
                         min={1}
                         max={8}
@@ -423,47 +466,66 @@ const UserDetailsForm = () => {
                       type="text"
                       name="referral"
                       placeholder="e.g. Twitter, friend, Google..."
-                      ref={referralSourceRef}
-                      //onChange={(e) => setReferralSource(e.target.value)}
+                      value={heardFrom}
+                      onChange={(e) => setHeardFrom(e.target.value)}
                       className="h-9"
                     />
                   </div>
 
-                  <div className="flex flex-col gap-1">
-                    <Button
-                      disabled={loading}
-                      onClick={handleSubmit}
-                      className="text-base font-semibold cursor-pointer"
-                    >
-                      {loading ? (
-                        <span className="animate-pulse">Submitting...</span>
-                      ) : (
-                        "Submit"
-                      )}
-                    </Button>
-                  </div>
                 </CardContent>
               </Card>
             </div>
           </CarouselItem>
         </CarouselContent>
-        <CarouselPrevious />
-        <CarouselNext />
       </Carousel>
 
-      {/* Dot indicators VIBCODED*/}
-      <div className="mt-1 flex items-center gap-2 px-3 py-2">
-        {Array.from({ length: TOTAL_SLIDES }).map((_, i) => (
-          <button
-            key={i}
+      <div className="mt-1 flex items-center justify-between gap-3 px-3 py-2 w-[35vw]">
+        {current > 0 ? (
+          <Button type="button" variant="outline" onClick={goBack} className="cursor-pointer">
+            <ChevronLeft className="size-4" />
+            Back
+          </Button>
+        ) : (
+          <div className="w-[72px]" />
+        )}
+
+        <div className="flex items-center gap-2">
+          {Array.from({ length: TOTAL_SLIDES }).map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => api?.scrollTo(i)}
+              className={`rounded-full transition-all duration-300 ${i === current
+                  ? "h-2 w-5 bg-primary"
+                  : "h-2 w-2 bg-muted-foreground/30 hover:bg-muted-foreground/60"
+                }`}
+            />
+          ))}
+        </div>
+
+        {current < TOTAL_SLIDES - 1 ? (
+          <Button
             type="button"
-            onClick={() => api?.scrollTo(i)}
-            className={`rounded-full transition-all duration-300 ${i === current
-              ? "h-2 w-5 bg-primary"
-              : "h-2 w-2 bg-muted-foreground/30 hover:bg-muted-foreground/60"
-              }`}
-          />
-        ))}
+            onClick={goNext}
+            disabled={!canGoNext()}
+            className="disabled:pointer-events-auto disabled:cursor-not-allowed cursor-pointer"
+          >
+            Next
+            <ChevronRight className="size-4" />
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            onClick={handleSubmit}
+            disabled={loading || !canSubmit()}
+            className={loading
+              ? "cursor-progress disabled:pointer-events-auto"
+              : "cursor-pointer disabled:pointer-events-auto disabled:cursor-not-allowed"
+            }
+          >
+            {loading ? <span className="animate-pulse">Submitting...</span> : "Submit"}
+          </Button>
+        )}
       </div>
     </div>
   );
