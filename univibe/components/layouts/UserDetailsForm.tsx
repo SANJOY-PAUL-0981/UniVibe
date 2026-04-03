@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { CollegePicker } from "@/components/ui/college-picker";
 import {
   Carousel,
   CarouselContent,
@@ -37,7 +38,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Span } from "next/dist/trace";
 
 const pronounOptions = [
   "he/him",
@@ -79,6 +79,7 @@ const UserDetailsForm = () => {
   const [selectedHobbies, setSelectedHobbies] = useState<string[]>([]);
   const [hobbyInput, setHobbyInput] = useState<string>("");
   const [isGender, setGender] = useState<string>("");
+  const [selectedCollege, setSelectedCollege] = useState<string>("");
   const availableHobbies = hobbyOptions.filter(
     (h) => !selectedHobbies.includes(h),
   );
@@ -89,6 +90,7 @@ const UserDetailsForm = () => {
   const collegeRef = useRef<HTMLInputElement>(null);
   const fieldOfStudyRef = useRef<HTMLInputElement>(null);
   const semesterRef = useRef<HTMLInputElement>(null);
+  const yearRef = useRef<HTMLInputElement>(null);
   const referralSourceRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(false);
@@ -124,9 +126,10 @@ const UserDetailsForm = () => {
         age: Number(ageRef?.current?.value),
         pronouns: isCustom ? customPronoun : selectedPronoun,
         university: universityRef?.current?.value,
-        college: collegeRef?.current?.value,
+        college: selectedCollege,
         fieldOfStudy: fieldOfStudyRef?.current?.value,
         semester: Number(semesterRef?.current?.value),
+        year: Number(yearRef?.current?.value),
         hobbies: selectedHobbies,
         heardFrom: referralSourceRef?.current?.value,
       };
@@ -144,7 +147,7 @@ const UserDetailsForm = () => {
       if (data.success === true) {
         setLoading(false);
         toast.success(data.message);
-        router.push("/profile");
+        router.push("/home");
       } else {
         setLoading(false);
         if (data.errors) {
@@ -219,6 +222,8 @@ const UserDetailsForm = () => {
                         name="age"
                         ref={ageRef}
                         placeholder="21"
+                        min={1}
+                        max={100}
                         className="h-9"
                       />
                     </div>
@@ -290,13 +295,10 @@ const UserDetailsForm = () => {
                   </div>
                   <div className="flex flex-col gap-1">
                     <Label htmlFor="college">College</Label>
-                    <Input
-                      id="college"
-                      type="text"
-                      name="college"
-                      ref={collegeRef}
-                      placeholder="e.g. School of Engineering"
-                      className="h-9"
+                    <CollegePicker
+                      value={selectedCollege}
+                      onChange={setSelectedCollege}
+                      placeholder="Search your college..."
                     />
                   </div>
                   <div className="flex flex-col gap-1">
@@ -310,16 +312,33 @@ const UserDetailsForm = () => {
                       className="h-9"
                     />
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <Label htmlFor="semester">Semester</Label>
-                    <Input
-                      id="semester"
-                      type="number"
-                      name="semester"
-                      ref={semesterRef}
-                      placeholder="e.g. 4"
-                      className="h-9"
-                    />
+                  <div className="flex w-full gap-4">
+                    <div className="flex min-w-0 flex-1 flex-col gap-1">
+                      <Label htmlFor="year">Year</Label>
+                      <Input
+                        id="year"
+                        type="number"
+                        name="year"
+                        ref={yearRef}
+                        placeholder="e.g. 4"
+                        min={1}
+                        max={4}
+                        className="h-9"
+                      />
+                    </div>
+                    <div className="flex min-w-0 flex-1 flex-col gap-1">
+                      <Label htmlFor="semester">Semester</Label>
+                      <Input
+                        id="semester"
+                        type="number"
+                        name="semester"
+                        ref={semesterRef}
+                        placeholder="e.g. 4"
+                        min={1}
+                        max={8}
+                        className="h-9"
+                      />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -451,11 +470,10 @@ const UserDetailsForm = () => {
             key={i}
             type="button"
             onClick={() => api?.scrollTo(i)}
-            className={`rounded-full transition-all duration-300 ${
-              i === current
-                ? "h-2 w-5 bg-primary"
-                : "h-2 w-2 bg-muted-foreground/30 hover:bg-muted-foreground/60"
-            }`}
+            className={`rounded-full transition-all duration-300 ${i === current
+              ? "h-2 w-5 bg-primary"
+              : "h-2 w-2 bg-muted-foreground/30 hover:bg-muted-foreground/60"
+              }`}
           />
         ))}
       </div>

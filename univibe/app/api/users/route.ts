@@ -77,6 +77,7 @@ export async function POST(req: NextRequest) {
         college: result.data.college,
         fieldOfStudy: result.data.fieldOfStudy,
         semester: result.data.semester,
+        year: result.data.year,
         hobbies: result.data.hobbies ?? [],
         heardFrom: result.data.heardFrom,
         userId: userId,

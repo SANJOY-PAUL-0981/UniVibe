@@ -44,6 +44,12 @@ const EducationalDetails = z.object({
     .int()
     .min(1, { message: "Semester must be between 1-8" })
     .max(8, { message: "Semester must be between 1-8" }),
+
+  year: z
+    .number({ error: "Year must be a number" })
+    .int()
+    .min(1, { message: "Year must be a between 1-4" })
+    .max(4, { message: "Year must be between 1-4" }),
 });
 
 const Miscellaneous = z.object({
@@ -51,9 +57,7 @@ const Miscellaneous = z.object({
   heardFrom: z.string().min(3).max(100),
 });
 
-export const ProfileFormSchema = PersonalDetails
-  .merge(EducationalDetails)
-  .merge(Miscellaneous);
+export const ProfileFormSchema =
+  PersonalDetails.merge(EducationalDetails).merge(Miscellaneous);
 
 export type ProfileFormData = z.infer<typeof ProfileFormSchema>; // Auto-generate the TypeScript type from the schema
-
