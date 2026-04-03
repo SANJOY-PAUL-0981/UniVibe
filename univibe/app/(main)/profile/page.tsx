@@ -51,8 +51,7 @@ export default async function ProfilePage() {
                     {/* ── Card 3: Education (spans 2 cols) ── */}
                     <div className="rounded-2xl border border-border/70 bg-card p-6 shadow-sm md:col-span-2">
                         <SectionTitle>Education</SectionTitle>
-                        <div className="mt-3 grid grid-cols-2 gap-2">
-                            <Field label="University" value={profile.university} />
+                        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">               
                             <Field label="College" value={profile.college} />
                             <Field label="Field of Study" value={profile.fieldOfStudy} />
                             <Field label="Semester" value={profile.semester?.toString()} />
@@ -82,9 +81,9 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 function Field({ label, value }: { label: string; value?: string | null }) {
     if (!value) return null;
     return (
-        <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
+        <div className="flex flex-col gap-1 rounded-lg bg-muted/50 px-3 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
             <span className="text-xs text-muted-foreground">{label}</span>
-            <span className="text-sm font-medium">{value}</span>
+            <span className="min-w-0 wrap-break-words text-sm font-medium sm:text-right">{value}</span>
         </div>
     );
 }

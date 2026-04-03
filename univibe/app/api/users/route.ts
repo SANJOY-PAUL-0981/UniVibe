@@ -73,7 +73,6 @@ export async function POST(req: NextRequest) {
         gender: result.data.gender,
         age: result.data.age,
         pronouns: result.data.pronouns,
-        university: result.data.university,
         college: result.data.college,
         fieldOfStudy: result.data.fieldOfStudy,
         semester: result.data.semester,

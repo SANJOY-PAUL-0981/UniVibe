@@ -4,7 +4,9 @@ import { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { CollegePicker } from "@/components/ui/college-picker";
+import { AutocompleteInput } from "@/components/ui/autocomplete-input"
+import collegeList from "@/data/college-names.json"
+import courseList from "@/data/course-names.json"
 import {
   Carousel,
   CarouselContent,
@@ -80,15 +82,13 @@ const UserDetailsForm = () => {
   const [hobbyInput, setHobbyInput] = useState<string>("");
   const [isGender, setGender] = useState<string>("");
   const [selectedCollege, setSelectedCollege] = useState<string>("");
+  const [selectedCourse, setSelectedCourse] = useState<string>("");
   const availableHobbies = hobbyOptions.filter(
     (h) => !selectedHobbies.includes(h),
   );
 
   const usernameRef = useRef<HTMLInputElement>(null);
   const ageRef = useRef<HTMLInputElement>(null);
-  const universityRef = useRef<HTMLInputElement>(null);
-  const collegeRef = useRef<HTMLInputElement>(null);
-  const fieldOfStudyRef = useRef<HTMLInputElement>(null);
   const semesterRef = useRef<HTMLInputElement>(null);
   const yearRef = useRef<HTMLInputElement>(null);
   const referralSourceRef = useRef<HTMLInputElement>(null);
@@ -125,9 +125,8 @@ const UserDetailsForm = () => {
         gender: isGender,
         age: Number(ageRef?.current?.value),
         pronouns: isCustom ? customPronoun : selectedPronoun,
-        university: universityRef?.current?.value,
         college: selectedCollege,
-        fieldOfStudy: fieldOfStudyRef?.current?.value,
+        fieldOfStudy: selectedCourse,
         semester: Number(semesterRef?.current?.value),
         year: Number(yearRef?.current?.value),
         hobbies: selectedHobbies,
@@ -282,20 +281,11 @@ const UserDetailsForm = () => {
                   </div>
                 </CardContent>
                 <CardContent className="flex flex-col gap-4 p-6">
+
                   <div className="flex flex-col gap-1">
-                    <Label htmlFor="university">University</Label>
-                    <Input
-                      id="university"
-                      type="text"
-                      name="university"
-                      ref={universityRef}
-                      placeholder="e.g. MIT"
-                      className="h-9"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <Label htmlFor="college">College</Label>
-                    <CollegePicker
+                    <Label htmlFor="college">University/College</Label>
+                    <AutocompleteInput
+                      data={collegeList}
                       value={selectedCollege}
                       onChange={setSelectedCollege}
                       placeholder="Search your college..."
@@ -303,13 +293,11 @@ const UserDetailsForm = () => {
                   </div>
                   <div className="flex flex-col gap-1">
                     <Label htmlFor="field">Field of Study</Label>
-                    <Input
-                      id="field"
-                      type="text"
-                      name="field"
-                      ref={fieldOfStudyRef}
-                      placeholder="e.g. Computer Science"
-                      className="h-9"
+                    <AutocompleteInput
+                      data={courseList}
+                      value={selectedCourse}
+                      onChange={setSelectedCourse}
+                      placeholder="e.g. BTECH "
                     />
                   </div>
                   <div className="flex w-full gap-4">
@@ -445,7 +433,7 @@ const UserDetailsForm = () => {
                     <Button
                       disabled={loading}
                       onClick={handleSubmit}
-                      className="text-base font-semibold"
+                      className="text-base font-semibold cursor-pointer"
                     >
                       {loading ? (
                         <span className="animate-pulse">Submitting...</span>
