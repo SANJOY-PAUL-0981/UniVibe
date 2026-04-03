@@ -143,7 +143,7 @@ export function AutocompleteInput({
           onFocus={() => results.length > 0 && setOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="h-10 pr-8 bg-card/50"
+          className="h-10 pr-8 bg-card"
           autoComplete="off"
         />
         <ChevronsUpDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
@@ -152,7 +152,7 @@ export function AutocompleteInput({
       {/* Dropdown */}
       {open && (
         <div
-          className="absolute left-0 right-0 z-50 mt-1 rounded-md border border-border bg-popover shadow-lg"
+          className="absolute left-0 right-0 z-50 mt-1 rounded-md border border-border bg-popover opacity-100 shadow-lg"
           style={{ maxHeight: "120px", overflowY: "auto" }}
         >
           <ul role="listbox" className="py-1">
@@ -192,7 +192,7 @@ export function AutocompleteInput({
                 className={cn(
                   "flex items-center gap-2 px-3 py-2 cursor-pointer select-none transition-colors text-sm border-t border-border/50 text-muted-foreground",
                   highlighted === results.length
-                    ? "bg-accent text-accent-foreground"
+                    ? "bg-accent text-accent-foreground" 
                     : "hover:bg-accent/50"
                 )}
               >

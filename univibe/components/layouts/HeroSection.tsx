@@ -31,7 +31,7 @@ const HeroSection = () => {
         href="/auth/signup">
         <Button
           size="lg"
-          className="mt-10 h-14 rounded-full px-9 text-lg font-extrabold tracking-tight reveal-pop reveal-delay-4"
+          className="mt-10 h-14 rounded-full px-9 text-lg font-extrabold tracking-tight reveal-pop reveal-delay-4 cursor-pointer"
         >
           Create Your Account
         </Button>

@@ -433,7 +433,7 @@ const UserDetailsForm = () => {
                     <Button
                       disabled={loading}
                       onClick={handleSubmit}
-                      className="text-base font-semibold"
+                      className="text-base font-semibold cursor-pointer"
                     >
                       {loading ? (
                         <span className="animate-pulse">Submitting...</span>

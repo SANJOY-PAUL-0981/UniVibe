@@ -188,7 +188,7 @@ function FilterCard({
 
             <div
                 className={cn(
-                    "mt-3 transition-opacity relative z-10",
+                    "mt-3 transition-opacity relative",
                     enabled ? "opacity-100" : "pointer-events-none opacity-45",
                 )}
             >

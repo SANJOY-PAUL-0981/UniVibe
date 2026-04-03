@@ -54,7 +54,7 @@ const Header = () => {
             <Link href="/auth/login">
               <Button
                 size="lg"
-                className="h-12 rounded-full px-8 text-base font-semibold"
+                className="h-12 rounded-full px-8 text-base font-semibold cursor-pointer"
               >
                 Login
               </Button>
