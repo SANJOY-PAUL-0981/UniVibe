@@ -15,7 +15,8 @@ const AuthCallbackPage = async () => {
     const profile = await prisma.profile.findUnique({
         where: {
             userId: session.user.id
-        }
+        },
+        select: { id: true }
     })
 
     redirect(profile ? "/home" : "/user-details")

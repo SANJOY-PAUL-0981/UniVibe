@@ -24,7 +24,7 @@ const FILTER_OPTIONS = {
 } as const;
 
 type FilterKey = "filterByGender" | "filterByCollege" | "filterByFieldOfStudy" | "filterByYear";
-type InputType = "select" | "college-autocomplete" | "course-autocomplete";
+type InputType = "select" | "college" | "course";
 
 type FilterValue = {
     enabled: boolean;
@@ -59,7 +59,7 @@ const FILTER_META: {
         label: "University/College",
         description: "Match a specific university/college",
         placeholder: "Choose college",
-        inputType: "college-autocomplete",
+        inputType: "college",
     },
     {
         key: "filterByFieldOfStudy",
@@ -67,7 +67,7 @@ const FILTER_META: {
         label: "Field of study",
         description: "Match a specific major",
         placeholder: "Choose field of study",
-        inputType: "course-autocomplete",
+        inputType: "course",
     },
     {
         key: "filterByYear",
@@ -192,21 +192,23 @@ function FilterCard({
                     enabled ? "opacity-100" : "pointer-events-none opacity-45",
                 )}
             >
-                {inputType === "college-autocomplete" && (
+                {inputType === "college" && (
                     <AutocompleteInput
                         data={collegeList}
                         value={value}
                         onChange={onChange}
                         placeholder={placeholder}
+                        iconType="college"
                     />
                 )}
                 
-                {inputType === "course-autocomplete" && (
+                {inputType === "course" && (
                     <AutocompleteInput
                         data={courseList}
                         value={value}
                         onChange={onChange}
                         placeholder={placeholder}
+                        iconType="course"
                     />
                 )}
 

@@ -4,13 +4,20 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Fuse from "fuse.js";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { CheckIcon, ChevronsUpDown, PlusCircle } from "lucide-react";
+import {
+  BookOpen,
+  CheckIcon,
+  ChevronsUpDown,
+  GraduationCap,
+  PlusCircle,
+} from "lucide-react";
 
 interface AutocompleteInputProps {
   data: string[];
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  iconType?: "default" | "college" | "course";
 }
 
 export function AutocompleteInput({
@@ -18,6 +25,7 @@ export function AutocompleteInput({
   value,
   onChange,
   placeholder = "Search...",
+  iconType = "default",
 }: AutocompleteInputProps) {
   const [query, setQuery] = useState(value ?? "");
   const [results, setResults] = useState<string[]>([]);
@@ -133,6 +141,13 @@ export function AutocompleteInput({
     setOpen(false);
   };
 
+  const RightIcon =
+    iconType === "college"
+      ? GraduationCap
+      : iconType === "course"
+      ? BookOpen
+      : ChevronsUpDown;
+
   return (
     <div ref={containerRef} className="relative w-full">
       {/* Input */}
@@ -146,7 +161,7 @@ export function AutocompleteInput({
           className="h-10 pr-8 bg-card"
           autoComplete="off"
         />
-        <ChevronsUpDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+        <RightIcon className="absolute right-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
       </div>
 
       {/* Dropdown */}

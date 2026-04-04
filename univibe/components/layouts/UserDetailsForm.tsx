@@ -330,6 +330,7 @@ const UserDetailsForm = () => {
                       value={selectedCollege}
                       onChange={setSelectedCollege}
                       placeholder="Search your college..."
+                      iconType="college"
                     />
                   </div>
                   <div className="flex flex-col gap-1">
@@ -339,6 +340,7 @@ const UserDetailsForm = () => {
                       value={selectedCourse}
                       onChange={setSelectedCourse}
                       placeholder="e.g. BTECH "
+                      iconType="course"
                     />
                   </div>
                   <div className="flex w-full gap-4">
