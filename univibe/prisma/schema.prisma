@@ -119,6 +119,17 @@ model WaitingUser {
   filterByYear           Boolean @default(false)
   filterYearData         Int?
 
+  // this will be never be touched this is for only passing the original or initial filter to currentSession
+  originalFilterByGender         Boolean @default(false)
+  originalFilterGenderData       String?
+  originalFilterByCollege        Boolean @default(false)
+  originalFilterCollegeData      String?
+  originalFilterByFieldOfStudy   Boolean @default(false)
+  originalFilterFieldOfStudyData String?
+  originalFilterByYear           Boolean @default(false)
+  originalFilterYearData         Int?
+  originalCurrentDomain          Int     @default(3)
+
   currentDomain Int @default(0) //0 = college | 2 = fieldofStudy | 3 = random
 
   createdAt DateTime @default(now())

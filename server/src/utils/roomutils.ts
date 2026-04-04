@@ -48,7 +48,17 @@ export const makeActive = async (profileId: string, socketId: string, filters: {
             filterGenderData: filters.filterGenderData,
             filterByYear: filters.filterByYear ?? false,
             filterYearData: filters.filterYearData,
-            currentDomain: filters.currentDomain ?? 3 // 3 means random
+            currentDomain: filters.currentDomain ?? 3, // 3 means random
+
+            originalFilterByCollege: filters.filterByCollege ?? false,
+            originalFilterCollegeData: filters.filterCollegeData,
+            originalFilterByFieldOfStudy: filters.filterByFieldOfStudy ?? false,
+            originalFilterFieldOfStudyData: filters.filterFieldOfStudyData,
+            originalFilterByGender: filters.filterByGender ?? false,
+            originalFilterGenderData: filters.filterGenderData,
+            originalFilterByYear: filters.filterByYear ?? false,
+            originalFilterYearData: filters.filterYearData,
+            originalCurrentDomain: filters.currentDomain ?? 3, // 3 means random
         }
     })
 
@@ -89,27 +99,27 @@ export const randomMatch = async (profileId: string) => {
             profile1Id: profileId,
             profile2Id: match.profileId,
 
-            p1CurrentDomain: initiatorData.currentDomain,
+            p1CurrentDomain: initiatorData.originalCurrentDomain,
 
-            p1FilterByCollege: initiatorData.filterByCollege,
-            p1FilterCollegeData: initiatorData.filterCollegeData,
-            p1FilterByFieldOfStudy: initiatorData.filterByFieldOfStudy,
-            p1FilterFieldOfStudyData: initiatorData.filterFieldOfStudyData,
-            p1FilterByGender: initiatorData.filterByGender,
-            p1FilterGenderData: initiatorData.filterGenderData,
-            p1FilterByYear: initiatorData.filterByYear,
-            p1FilterYearData: initiatorData.filterYearData,
+            p1FilterByCollege: initiatorData.originalFilterByCollege,
+            p1FilterCollegeData: initiatorData.originalFilterCollegeData,
+            p1FilterByFieldOfStudy: initiatorData.originalFilterByFieldOfStudy,
+            p1FilterFieldOfStudyData: initiatorData.originalFilterFieldOfStudyData,
+            p1FilterByGender: initiatorData.originalFilterByGender,
+            p1FilterGenderData: initiatorData.originalFilterGenderData,
+            p1FilterByYear: initiatorData.originalFilterByYear,
+            p1FilterYearData: initiatorData.originalFilterYearData,
 
-            p2CurrentDomain: match.currentDomain,
+            p2CurrentDomain: match.originalCurrentDomain,
 
-            p2FilterByCollege: match.filterByCollege,
-            p2FilterCollegeData: match.filterCollegeData,
-            p2FilterByFieldOfStudy: match.filterByFieldOfStudy,
-            p2FilterFieldOfStudyData: match.filterFieldOfStudyData,
-            p2FilterByGender: match.filterByGender,
-            p2FilterGenderData: match.filterGenderData,
-            p2FilterByYear: match.filterByYear,
-            p2FilterYearData: match.filterYearData
+            p2FilterByCollege: match.originalFilterByCollege,
+            p2FilterCollegeData: match.originalFilterCollegeData,
+            p2FilterByFieldOfStudy: match.originalFilterByFieldOfStudy,
+            p2FilterFieldOfStudyData: match.originalFilterFieldOfStudyData,
+            p2FilterByGender: match.originalFilterByGender,
+            p2FilterGenderData: match.originalFilterGenderData,
+            p2FilterByYear: match.originalFilterByYear,
+            p2FilterYearData: match.originalFilterYearData
         }
     })
 
@@ -285,6 +295,98 @@ export const onDisconnected = async (roomId: string, disconnectedProfileId: stri
     }
 }
 
-export const filterMatch = async () => {
+export const filterMatch = async (
+    profileId: string,
+    currentDomain: number,
+    filters: { // for the function call on fallback
+        filterByGender?: boolean,
+        filterGenderData?: string
+        filterByCollege?: boolean,
+        filterCollegeData?: string
+        filterByFieldOfStudy?: boolean,
+        filterFieldOfStudyData?: string,
+        filterByYear?: boolean,
+        filterYearData?: number
+    }
+) => {
 
+    type Domain = 0 | 1 | 2;
+    const domainMap: Record<Domain, any> = {
+        0: {
+            filterByCollege: filters.filterByCollege,
+            filterCollegeData: filters.filterCollegeData
+        },
+        1: {
+            filterByYear: filters.filterByYear,
+            filterYearData: filters.filterYearData
+        },
+        2: {
+            filterByFieldOfStudy: filters.filterByFieldOfStudy,
+            filterFieldOfStudyData: filters.filterFieldOfStudyData
+        }
+    }
+
+    const where = {
+        ...domainMap[currentDomain as Domain],
+        NOT: { profileId }
+    }
+
+    const match = await prisma.waitingUser.findFirst({
+        where,
+        orderBy: {
+            createdAt: "asc"
+        }
+    })
+
+    if (!match) {
+        return null
+    }
+
+    const initiatorData = await prisma.waitingUser.findUnique({
+        where: { profileId }
+    })
+
+    if (!initiatorData) {
+        return null
+    }
+
+    const session = await prisma.callSession.create({
+        data: {
+            profile1Id: profileId,
+            profile2Id: match.profileId,
+
+            p1CurrentDomain: initiatorData.originalCurrentDomain,
+
+            p1FilterByCollege: initiatorData.originalFilterByCollege,
+            p1FilterCollegeData: initiatorData.originalFilterCollegeData,
+            p1FilterByFieldOfStudy: initiatorData.originalFilterByFieldOfStudy,
+            p1FilterFieldOfStudyData: initiatorData.originalFilterFieldOfStudyData,
+            p1FilterByGender: initiatorData.originalFilterByGender,
+            p1FilterGenderData: initiatorData.originalFilterGenderData,
+            p1FilterByYear: initiatorData.originalFilterByYear,
+            p1FilterYearData: initiatorData.originalFilterYearData,
+
+            p2CurrentDomain: match.originalCurrentDomain,
+
+            p2FilterByCollege: match.originalFilterByCollege,
+            p2FilterCollegeData: match.originalFilterCollegeData,
+            p2FilterByFieldOfStudy: match.originalFilterByFieldOfStudy,
+            p2FilterFieldOfStudyData: match.originalFilterFieldOfStudyData,
+            p2FilterByGender: match.originalFilterByGender,
+            p2FilterGenderData: match.originalFilterGenderData,
+            p2FilterByYear: match.originalFilterByYear,
+            p2FilterYearData: match.originalFilterYearData
+        }
+    })
+
+    await prisma.waitingUser.deleteMany({
+        where: {
+            profileId: { in: [profileId, match.profileId] }
+        }
+    })
+
+    return {
+        success: true,
+        session
+    }
 }
