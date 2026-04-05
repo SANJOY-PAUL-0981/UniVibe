@@ -16,8 +16,17 @@ export const makeActive = async (profileId: string, socketId: string, filters: {
     })
 
     if (alreadyWaiting) {
+        await prisma.waitingUser.update({
+            where: {
+                profileId
+            },
+            data: {
+                socketId
+            }
+        })
         return {
-            error: "Already in Waiting Queue!"
+            success: true,
+            waitingUser: alreadyWaiting
         }
     }
 
@@ -210,12 +219,30 @@ export const requeueBoth = async (
             {
                 profileId: profile1Id,
                 socketId: p1SocketId,
-                ...p1Prefs
+                ...p1Prefs,
+                originalFilterByGender: p1Prefs.filterByGender,
+                originalFilterGenderData: p1Prefs.filterGenderData,
+                originalFilterByCollege: p1Prefs.filterByCollege,
+                originalFilterCollegeData: p1Prefs.filterCollegeData,
+                originalFilterByFieldOfStudy: p1Prefs.filterByFieldOfStudy,
+                originalFilterFieldOfStudyData: p1Prefs.filterFieldOfStudyData,
+                originalFilterByYear: p1Prefs.filterByYear,
+                originalFilterYearData: p1Prefs.filterYearData,
+                originalCurrentDomain: p1Prefs.currentDomain
             },
             {
                 profileId: profile2Id,
                 socketId: p2SocketId,
-                ...p2Prefs
+                ...p2Prefs,
+                originalFilterByGender: p2Prefs.filterByGender,
+                originalFilterGenderData: p2Prefs.filterGenderData,
+                originalFilterByCollege: p2Prefs.filterByCollege,
+                originalFilterCollegeData: p2Prefs.filterCollegeData,
+                originalFilterByFieldOfStudy: p2Prefs.filterByFieldOfStudy,
+                originalFilterFieldOfStudyData: p2Prefs.filterFieldOfStudyData,
+                originalFilterByYear: p2Prefs.filterByYear,
+                originalFilterYearData: p2Prefs.filterYearData,
+                originalCurrentDomain: p2Prefs.currentDomain
             }
         ]
     })
@@ -242,7 +269,16 @@ export const requeueOne = async (
         data: {
             profileId,
             socketId,
-            ...p1Prefs
+            ...p1Prefs,
+            originalFilterByGender: p1Prefs.filterByGender,
+            originalFilterGenderData: p1Prefs.filterGenderData,
+            originalFilterByCollege: p1Prefs.filterByCollege,
+            originalFilterCollegeData: p1Prefs.filterCollegeData,
+            originalFilterByFieldOfStudy: p1Prefs.filterByFieldOfStudy,
+            originalFilterFieldOfStudyData: p1Prefs.filterFieldOfStudyData,
+            originalFilterByYear: p1Prefs.filterByYear,
+            originalFilterYearData: p1Prefs.filterYearData,
+            originalCurrentDomain: p1Prefs.currentDomain
         }
     })
 
