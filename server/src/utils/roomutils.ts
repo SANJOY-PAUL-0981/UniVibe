@@ -131,7 +131,8 @@ export const randomMatch = async (profileId: string) => {
 
     return {
         success: true,
-        session
+        session,
+        matchedSocketId: match.socketId
     }
 }
 
@@ -311,34 +312,17 @@ export const filterMatch = async (
 ) => {
 
     type Domain = 0 | 1 | 2;
-    const domainMap: Record<Domain, any> = {
-        0: {
-            filterByCollege: filters.filterByCollege,
-            filterCollegeData: filters.filterCollegeData
-        },
-        1: {
-            filterByYear: filters.filterByYear,
-            filterYearData: filters.filterYearData
-        },
-        2: {
-            filterByFieldOfStudy: filters.filterByFieldOfStudy,
-            filterFieldOfStudyData: filters.filterFieldOfStudyData
-        }
-    }
 
-    const where = {
-        ...domainMap[currentDomain as Domain],
-        NOT: { profileId }
-    }
+    const isOnlyGender = filters.filterByGender &&
+        !filters.filterByCollege &&
+        !filters.filterByYear &&
+        !filters.filterByFieldOfStudy
 
-    const match = await prisma.waitingUser.findFirst({
-        where,
-        orderBy: {
-            createdAt: "asc"
-        }
+    const initiatorProfile = await prisma.profile.findUnique({
+        where: { id: profileId }
     })
 
-    if (!match) {
+    if (!initiatorProfile) {
         return null
     }
 
@@ -347,6 +331,71 @@ export const filterMatch = async (
     })
 
     if (!initiatorData) {
+        return null
+    }
+
+    let match;
+
+    if (isOnlyGender) {
+        const candidates = await prisma.waitingUser.findMany({
+            where: {
+                filterByGender: true,
+                filterGenderData: initiatorProfile.gender,
+                NOT: { profileId }
+            },
+            include: {
+                profile: true
+            },
+            orderBy: {
+                createdAt: "asc"
+            }
+        })
+
+        match = candidates.find(c => c.profile.gender === filters.filterGenderData) ?? null
+    } else {
+        const domainMap: Record<Domain, object> = {
+            0: {
+                filterByCollege: true,
+                filterCollegeData: initiatorProfile.college,
+                ...(filters.filterByGender && { filterByGender: true, filterGenderData: initiatorProfile.gender })
+            },
+            1: {
+                filterByYear: true,
+                filterYearData: initiatorProfile.year,
+                ...(filters.filterByGender && { filterByGender: true, filterGenderData: initiatorProfile.gender })
+            },
+            2: {
+                filterByFieldOfStudy: true,
+                filterFieldOfStudyData: initiatorProfile.fieldOfStudy,
+                ...(filters.filterByGender && { filterByGender: true, filterGenderData: initiatorProfile.gender })
+            }
+        }
+
+        const candidates = await prisma.waitingUser.findMany({
+            where: {
+                ...domainMap[currentDomain as Domain],
+                NOT: { profileId }
+            },
+            include: { profile: true },
+            orderBy: { createdAt: "asc" }
+        })
+
+        match = candidates.find(c => {
+            const domainMatch =
+                currentDomain === 0 ? c.profile.college === filters.filterCollegeData :
+                    currentDomain === 1 ? c.profile.year === filters.filterYearData :
+                        currentDomain === 2 ? c.profile.fieldOfStudy === filters.filterFieldOfStudyData :
+                            false
+
+            const genderMatch = filters.filterByGender
+                ? c.profile.gender === filters.filterGenderData
+                : true
+
+            return domainMatch && genderMatch
+        }) ?? null
+    }
+
+    if (!match) {
         return null
     }
 
@@ -387,6 +436,26 @@ export const filterMatch = async (
 
     return {
         success: true,
-        session
+        session,
+        matchedSocketId: match.socketId
     }
+}
+
+export const updateWaitingUser = async (profileId: string, data: {
+    filterByCollege?: boolean,
+    filterCollegeData?: string | null,
+    filterByFieldOfStudy?: boolean,
+    filterFieldOfStudyData?: string | null,
+    filterByGender?: boolean,
+    filterGenderData?: string | null,
+    filterByYear?: boolean,
+    filterYearData?: number | null,
+    currentDomain?: number
+}) => {
+    const updated = await prisma.waitingUser.update({
+        where: { profileId },
+        data
+    })
+
+    return { success: true, updated }
 }
