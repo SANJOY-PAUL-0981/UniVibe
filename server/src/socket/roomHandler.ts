@@ -18,7 +18,7 @@ const roomHandler = (io: Server) => {
         socket.on('join', async ({ profileId, filters, currentDomain }) => {
             try {
                 console.log("User connected: ", socket.id)
-                let activeUser = await makeActive(profileId, socket.id, filters)
+                let activeUser = await makeActive(profileId, socket.id, {...filters, currentDomain})
 
                 if ('error' in activeUser) {
                     socket.emit('error', { message: activeUser.error })
@@ -34,7 +34,7 @@ const roomHandler = (io: Server) => {
                     const match = await randomMatch(profileId)
 
                     if (!match) {
-                        socket.emit('waiting', { message: 'lookin for someone...' })
+                        socket.emit('waiting', { message: 'looking for someone...' })
 
                         const timeOut = setTimeout(async () => {
                             try {
@@ -147,6 +147,7 @@ const roomHandler = (io: Server) => {
 
                             const timeOut = setTimeout(async () => {
                                 try {
+                                    console.log("timeout fired, domain was:", domain, "incrementing to:", domain + 1)
                                     timeoutMap.delete(profileId)
                                     domain++
 
@@ -171,7 +172,7 @@ const roomHandler = (io: Server) => {
                                             return
                                         }
 
-                                        socket.emit('waiting', { message: "Looking for someone..." })
+                                        socket.emit('waiting', { message: "Looking for anyone..." })
                                         const randomTimeout = setTimeout(async () => {
                                             try {
                                                 await prisma.waitingUser.delete({ where: { profileId } })

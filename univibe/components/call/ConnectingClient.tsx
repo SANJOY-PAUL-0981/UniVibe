@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useSocket } from "@/hooks/useSocket"
 import { useWebRTC } from "@/hooks/useWebRTC"
@@ -33,6 +33,9 @@ export default function ConnectingClient({ profileId, filters, currentDomain }: 
     const [noMatch, setNoMatch] = useState(false)
     const [checking, setChecking] = useState(true)
     const [timeLeft, setTimeLeft] = useState(60)
+    const intervalRef = useRef<NodeJS.Timeout | null>(null)
+    const listenersRegistered = useRef(false)
+
 
     useWebRTC(socket, null)
 
@@ -56,20 +59,39 @@ export default function ConnectingClient({ profileId, filters, currentDomain }: 
         return () => window.removeEventListener("beforeunload", handleBeforeUnload)
     }, [])
 
-    useEffect(() => {
-        const interval = setInterval(() => {
+    const startTimer = (seconds: number) => {
+        if (intervalRef.current) clearInterval(intervalRef.current)
+        setTimeLeft(seconds)
+        intervalRef.current = setInterval(() => {
             setTimeLeft(prev => {
                 if (prev <= 1) {
-                    clearInterval(interval)
+                    clearInterval(intervalRef.current!)
                     return 0
                 }
                 return prev - 1
             })
         }, 1000)
-        return () => clearInterval(interval)
-    }, [timeLeft]) // restart when timeLeft resets
+    }
+
+    // start initial timer on mount
+    useEffect(() => {
+        const isRandom = !filters.filterByCollege && !filters.filterByYear && !filters.filterByFieldOfStudy
+        startTimer(isRandom ? 60 : 20)
+        return () => {
+            if (intervalRef.current) clearInterval(intervalRef.current)
+        }
+    }, [])
 
     useEffect(() => {
+        if (listenersRegistered.current) return
+        listenersRegistered.current = true
+
+        socket.off("waiting")
+        socket.off("searching_domain")
+        socket.off("match_found")
+        socket.off("no_match_found")
+        socket.off("error")
+        
         socket.emit("join", {
             profileId,
             filters: {
@@ -87,25 +109,25 @@ export default function ConnectingClient({ profileId, filters, currentDomain }: 
 
         socket.on("waiting", ({ message }: { message: string }) => {
             setCallStatus("waiting")
-            setMessage(message)
+            //setMessage(message)
         })
 
         socket.on("searching_domain", ({ domain }: { domain: number }) => {
-            console.log("searching_domain fired:", domain)
+            console.log("searching_domain fired:", domain, new Error().stack)
             const domainMessages: Record<number, string> = {
                 0: "Looking for someone from your college...",
                 1: "Looking for someone in your year...",
                 2: "Looking for someone in your field...",
                 3: "Looking for anyone..."
             }
+
             const domainTimers: Record<number, number> = {
-                0: 20,
                 1: 10,
                 2: 10,
                 3: 40
             }
+            startTimer(domainTimers[domain] ?? 60)
             setMessage(domainMessages[domain] ?? "Looking for someone...")
-            setTimeLeft(domainTimers[domain] ?? 60)
         })
 
         socket.on("match_found", ({ roomId }: { roomId: string }) => {

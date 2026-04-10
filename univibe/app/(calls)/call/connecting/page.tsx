@@ -33,6 +33,7 @@ export default async function ConnectingPage({ searchParams }: Props) {
     }
 
     const currentDomain = parseInt(params.currentDomain ?? "3")
+    console.log("currentDomain from params:", params.currentDomain)
 
     return (
         <ConnectingClient
