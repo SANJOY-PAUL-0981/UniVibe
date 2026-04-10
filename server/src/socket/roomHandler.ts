@@ -17,8 +17,12 @@ const roomHandler = (io: Server) => {
     io.on('connection', (socket) => {
         socket.on('join', async ({ profileId, filters, currentDomain }) => {
             try {
+                if (timeoutMap.has(profileId)) {
+                    clearTimeout(timeoutMap.get(profileId));
+                    timeoutMap.delete(profileId);
+                }
                 console.log("User connected: ", socket.id)
-                let activeUser = await makeActive(profileId, socket.id, {...filters, currentDomain})
+                let activeUser = await makeActive(profileId, socket.id, { ...filters, currentDomain })
 
                 if ('error' in activeUser) {
                     socket.emit('error', { message: activeUser.error })
@@ -151,6 +155,8 @@ const roomHandler = (io: Server) => {
                                     timeoutMap.delete(profileId)
                                     domain++
 
+                                    socket.emit('searching_domain', { domain: domain });
+
                                     // fallback at random
                                     if (domain === 3) {
                                         const randomMatchResult = await randomMatch(profileId)
@@ -191,7 +197,7 @@ const roomHandler = (io: Server) => {
                                         ...(domain === 2 && { filterByYear: false, filterYearData: null, filterByFieldOfStudy: true, filterFieldOfStudyData: profile.fieldOfStudy, currentDomain: 2 }),
                                     })
 
-                                    socket.emit('searching_domain', { domain })
+                                    //socket.emit('searching_domain', { domain })
                                     await tryFilterMatch()
                                 } catch (err) {
                                     console.error(err)

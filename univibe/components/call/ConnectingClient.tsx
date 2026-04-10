@@ -34,8 +34,6 @@ export default function ConnectingClient({ profileId, filters, currentDomain }: 
     const [checking, setChecking] = useState(true)
     const [timeLeft, setTimeLeft] = useState(60)
     const intervalRef = useRef<NodeJS.Timeout | null>(null)
-    const listenersRegistered = useRef(false)
-
 
     useWebRTC(socket, null)
 
@@ -83,15 +81,14 @@ export default function ConnectingClient({ profileId, filters, currentDomain }: 
     }, [])
 
     useEffect(() => {
-        if (listenersRegistered.current) return
-        listenersRegistered.current = true
+        if (!socket) return;
 
         socket.off("waiting")
         socket.off("searching_domain")
         socket.off("match_found")
         socket.off("no_match_found")
         socket.off("error")
-        
+
         socket.emit("join", {
             profileId,
             filters: {
