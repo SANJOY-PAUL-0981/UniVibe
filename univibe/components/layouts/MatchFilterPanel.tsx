@@ -14,8 +14,8 @@ import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { cn } from "@/lib/utils";
 
 
-import collegeList from "@/data/college-names.json"; 
-import courseList from "@/data/course-names.json";   
+import collegeList from "@/data/college-names.json";
+import courseList from "@/data/course-names.json";
 
 
 const FILTER_OPTIONS = {
@@ -26,15 +26,16 @@ const FILTER_OPTIONS = {
 type FilterKey = "filterByGender" | "filterByCollege" | "filterByFieldOfStudy" | "filterByYear";
 type InputType = "select" | "college" | "course";
 
-type FilterValue = {
+export type FilterValue = {
     enabled: boolean;
     value: string;
 };
 
-type Filters = Record<FilterKey, FilterValue>;
+export type Filters = Record<FilterKey, FilterValue>;
 
 type Props = {
     onValidityChange?: (isValid: boolean) => void;
+    onFiltersChange?: (filters: Filters) => void;
 };
 
 const FILTER_META: {
@@ -45,41 +46,41 @@ const FILTER_META: {
     placeholder: string;
     inputType: InputType;
 }[] = [
-    {
-        key: "filterByGender",
-        id: "fg",
-        label: "Gender",
-        description: "Match a specific gender",
-        placeholder: "Choose gender",
-        inputType: "select",
-    },
-    {
-        key: "filterByCollege",
-        id: "fc",
-        label: "University/College",
-        description: "Match a specific university/college",
-        placeholder: "Choose college",
-        inputType: "college",
-    },
-    {
-        key: "filterByFieldOfStudy",
-        id: "ff",
-        label: "Field of study",
-        description: "Match a specific major",
-        placeholder: "Choose field of study",
-        inputType: "course",
-    },
-    {
-        key: "filterByYear",
-        id: "fy",
-        label: "Year",
-        description: "Match a specific academic year",
-        placeholder: "Choose year",
-        inputType: "select",
-    },
-];
+        {
+            key: "filterByGender",
+            id: "fg",
+            label: "Gender",
+            description: "Match a specific gender",
+            placeholder: "Choose gender",
+            inputType: "select",
+        },
+        {
+            key: "filterByCollege",
+            id: "fc",
+            label: "University/College",
+            description: "Match a specific university/college",
+            placeholder: "Choose college",
+            inputType: "college",
+        },
+        {
+            key: "filterByFieldOfStudy",
+            id: "ff",
+            label: "Field of study",
+            description: "Match a specific major",
+            placeholder: "Choose field of study",
+            inputType: "course",
+        },
+        {
+            key: "filterByYear",
+            id: "fy",
+            label: "Year",
+            description: "Match a specific academic year",
+            placeholder: "Choose year",
+            inputType: "select",
+        },
+    ];
 
-export function MatchFilterPanel({ onValidityChange }: Props) {
+export function MatchFilterPanel({ onValidityChange, onFiltersChange }: Props) {
     const [filters, setFilters] = useState<Filters>({
         filterByGender: { enabled: false, value: "" },
         filterByCollege: { enabled: false, value: "" },
@@ -105,7 +106,8 @@ export function MatchFilterPanel({ onValidityChange }: Props) {
         );
 
         onValidityChange?.(!anyEnabledWithoutValue);
-    }, [filters, onValidityChange]);
+        onFiltersChange?.(filters);
+    }, [filters, onValidityChange, onFiltersChange]);
 
     return (
         <div className="w-full max-w-4xl rounded-xl border border-border/70 bg-card p-5 shadow-sm">
@@ -118,8 +120,8 @@ export function MatchFilterPanel({ onValidityChange }: Props) {
                 {FILTER_META.map((item) => {
                     const filterState = filters[item.key];
                     // Only pass options if it's a select dropdown
-                    const options = item.inputType === "select" 
-                        ? FILTER_OPTIONS[item.key as keyof typeof FILTER_OPTIONS] 
+                    const options = item.inputType === "select"
+                        ? FILTER_OPTIONS[item.key as keyof typeof FILTER_OPTIONS]
                         : [];
 
                     return (
@@ -143,10 +145,10 @@ export function MatchFilterPanel({ onValidityChange }: Props) {
             {Object.values(filters).some(
                 (filter) => filter.enabled && filter.value.trim() === "",
             ) && (
-                <p className="mt-4 text-sm text-destructive">
-                    Select a value for every enabled filter before starting the call.
-                </p>
-            )}
+                    <p className="mt-4 text-sm text-destructive">
+                        Select a value for every enabled filter before starting the call.
+                    </p>
+                )}
         </div>
     );
 }
@@ -201,7 +203,7 @@ function FilterCard({
                         iconType="college"
                     />
                 )}
-                
+
                 {inputType === "course" && (
                     <AutocompleteInput
                         data={courseList}

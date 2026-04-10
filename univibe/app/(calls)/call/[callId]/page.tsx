@@ -1,20 +1,18 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { getMainUserData } from "@/lib/getMainUserData"
+import CallClient from "@/components/call/CallClient"
 
-export default async function SingleCallPage({
-  params,
-}: {
-  params: Promise<{ callId: string }>;
-}) {
-  const { callId } = await params;
-  return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background">
-      <h1 className="text-2xl font-bold text-foreground">
-        Single Call: {callId}
-      </h1>
-      <Button variant="destructive">
-        <Link href="/home">End Call</Link>
-      </Button>
-    </div>
-  );
+type Props = {
+    params: Promise<{ callId: string }>
+}
+
+export default async function CallPage({ params }: Props) {
+    const { profile } = await getMainUserData()
+    const { callId } = await params
+
+    return (
+        <CallClient
+            profileId={profile.id}
+            roomId={callId}
+        />
+    )
 }

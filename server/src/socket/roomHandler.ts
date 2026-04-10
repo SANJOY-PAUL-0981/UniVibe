@@ -37,11 +37,15 @@ const roomHandler = (io: Server) => {
                         socket.emit('waiting', { message: 'lookin for someone...' })
 
                         const timeOut = setTimeout(async () => {
-                            await prisma.waitingUser.delete({
-                                where: { profileId }
-                            })
-                            socket.emit("no_match_found")
-                            timeoutMap.delete(profileId)
+                            try {
+                                await prisma.waitingUser.delete({
+                                    where: { profileId }
+                                })
+                                socket.emit("no_match_found")
+                                timeoutMap.delete(profileId)
+                            } catch (err) {
+                                console.error(err)
+                            }
                         }, 60000)
 
                         timeoutMap.set(profileId, timeOut)
@@ -98,9 +102,13 @@ const roomHandler = (io: Server) => {
 
                         socket.emit('waiting', { message: 'Looking for someone...' })
                         const timeout = setTimeout(async () => {
-                            await prisma.waitingUser.delete({ where: { profileId } })
-                            socket.emit('no_match_found')
-                            timeoutMap.delete(profileId)
+                            try {
+                                await prisma.waitingUser.delete({ where: { profileId } })
+                                socket.emit('no_match_found')
+                                timeoutMap.delete(profileId)
+                            } catch (err) {
+                                console.error(err)
+                            }
                         }, 60000)
                         timeoutMap.set(profileId, timeout)
                         return
@@ -138,47 +146,55 @@ const roomHandler = (io: Server) => {
                             socket.emit('waiting', { message: 'Looking for someone with matching interests...' })
 
                             const timeOut = setTimeout(async () => {
-                                timeoutMap.delete(profileId)
-                                domain++
+                                try {
+                                    timeoutMap.delete(profileId)
+                                    domain++
 
-                                // fallback at random
-                                if (domain === 3) {
-                                    const randomMatchResult = await randomMatch(profileId)
+                                    // fallback at random
+                                    if (domain === 3) {
+                                        const randomMatchResult = await randomMatch(profileId)
 
-                                    if (randomMatchResult) {
-                                        const roomId = randomMatchResult.session.roomId
+                                        if (randomMatchResult) {
+                                            const roomId = randomMatchResult.session.roomId
 
-                                        socketRoomMap.set(socket.id, { roomId, profileId })
-                                        socketRoomMap.set(randomMatchResult.matchedSocketId, { roomId, profileId: randomMatchResult.session.profile2Id })
+                                            socketRoomMap.set(socket.id, { roomId, profileId })
+                                            socketRoomMap.set(randomMatchResult.matchedSocketId, { roomId, profileId: randomMatchResult.session.profile2Id })
 
-                                        clearTimeout(timeoutMap.get(profileId))
-                                        timeoutMap.delete(profileId)
-                                        clearTimeout(timeoutMap.get(randomMatchResult.session.profile2Id))
-                                        timeoutMap.delete(randomMatchResult.session.profile2Id)
+                                            clearTimeout(timeoutMap.get(profileId))
+                                            timeoutMap.delete(profileId)
+                                            clearTimeout(timeoutMap.get(randomMatchResult.session.profile2Id))
+                                            timeoutMap.delete(randomMatchResult.session.profile2Id)
 
-                                        socket.join(roomId)
-                                        io.to(randomMatchResult.matchedSocketId).socketsJoin(roomId)
-                                        io.to(roomId).emit('match_found', { roomId })
+                                            socket.join(roomId)
+                                            io.to(randomMatchResult.matchedSocketId).socketsJoin(roomId)
+                                            io.to(roomId).emit('match_found', { roomId })
+                                            return
+                                        }
+
+                                        socket.emit('waiting', { message: "Looking for someone..." })
+                                        const randomTimeout = setTimeout(async () => {
+                                            try {
+                                                await prisma.waitingUser.delete({ where: { profileId } })
+                                                socket.emit('no_match_found')
+                                                timeoutMap.delete(profileId)
+                                            } catch (err) {
+                                                console.error(err)
+                                            }
+                                        }, 40000)
+                                        timeoutMap.set(profileId, randomTimeout)
                                         return
                                     }
 
-                                    socket.emit('waiting', { message: "Looking for someone..." })
-                                    const randomTimeout = setTimeout(async () => {
-                                        await prisma.waitingUser.delete({ where: { profileId } })
-                                        socket.emit('no_match_found')
-                                        timeoutMap.delete(profileId)
-                                    }, 40000)
-                                    timeoutMap.set(profileId, randomTimeout)
-                                    return
+                                    await updateWaitingUser(profileId, {
+                                        ...(domain === 1 && { filterByCollege: false, filterCollegeData: null, filterByYear: true, filterYearData: profile.year, currentDomain: 1 }),
+                                        ...(domain === 2 && { filterByYear: false, filterYearData: null, filterByFieldOfStudy: true, filterFieldOfStudyData: profile.fieldOfStudy, currentDomain: 2 }),
+                                    })
+
+                                    socket.emit('searching_domain', { domain })
+                                    await tryFilterMatch()
+                                } catch (err) {
+                                    console.error(err)
                                 }
-
-                                await updateWaitingUser(profileId, {
-                                    ...(domain === 1 && { filterByCollege: false, filterCollegeData: null, filterByYear: true, filterYearData: profile.year, currentDomain: 1 }),
-                                    ...(domain === 2 && { filterByYear: false, filterYearData: null, filterByFieldOfStudy: true, filterFieldOfStudyData: profile.fieldOfStudy, currentDomain: 2 }),
-                                })
-
-                                socket.emit('searching_domain', { domain })
-                                await tryFilterMatch()
                             }, waitTime)
                             timeoutMap.set(profileId, timeOut)
                         }
@@ -200,7 +216,9 @@ const roomHandler = (io: Server) => {
                     return null
                 }
 
-                await onSkip(roomId, socket1Id, socket2Id)
+                const result = await onSkip(roomId, socket1Id, socket2Id)
+                if (!result) return
+
                 io.to(roomId).emit('skipped')
                 io.socketsLeave(roomId)
                 socketRoomMap.delete(socket1Id)
@@ -246,6 +264,7 @@ const roomHandler = (io: Server) => {
                 }
 
                 const result = await onDisconnected(roomId, profileId, remainingSocketId)
+                if (!result) return
 
                 io.to(remainingSocketId).emit('peer_disconnected')
 
