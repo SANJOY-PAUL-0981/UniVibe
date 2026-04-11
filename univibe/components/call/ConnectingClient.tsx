@@ -109,21 +109,16 @@ export default function ConnectingClient({ profileId, filters, currentDomain }: 
             //setMessage(message)
         })
 
-        socket.on("searching_domain", ({ domain }: { domain: number }) => {
+        socket.on("searching_domain", ({ domain, duration }: { domain: number, duration: number }) => {
             console.log("searching_domain fired:", domain, new Error().stack)
             const domainMessages: Record<number, string> = {
-                0: "Looking for someone from your college...",
-                1: "Looking for someone in your year...",
-                2: "Looking for someone in your field...",
+                0: "Looking for someone in college...",
+                1: "Looking for someone in year...",
+                2: "Looking for someone with field of study...",
                 3: "Looking for anyone..."
             }
 
-            const domainTimers: Record<number, number> = {
-                1: 10,
-                2: 10,
-                3: 40
-            }
-            startTimer(domainTimers[domain] ?? 60)
+            startTimer(duration)
             setMessage(domainMessages[domain] ?? "Looking for someone...")
         })
 

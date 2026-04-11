@@ -77,7 +77,12 @@ const roomHandler = (io: Server) => {
                         return null
                     }
 
+                    const getDuration = (domain: number, currentDomain: number) => {
+                        return domain === currentDomain ? 20 : 10
+                    }
+
                     let domain = currentDomain
+                    //socket.emit('searching_domain', { domain, duration: getDuration(domain, currentDomain) })
 
                     const isOnlyGender = filters.filterByGender &&
                         !filters.filterByCollege &&
@@ -85,6 +90,7 @@ const roomHandler = (io: Server) => {
                         !filters.filterByFieldOfStudy
 
                     if (isOnlyGender) {
+                        socket.emit('searching_domain', { domain: 3, duration: 60 })
                         const matchWithGender = await filterMatch(profileId, 3, filters)
 
                         if (matchWithGender) {
@@ -117,6 +123,7 @@ const roomHandler = (io: Server) => {
                         timeoutMap.set(profileId, timeout)
                         return
                     }
+                    socket.emit('searching_domain', { domain, duration: getDuration(domain, currentDomain) })
 
                     const tryFilterMatch = async () => {
                         const currentFilters = {
@@ -152,10 +159,11 @@ const roomHandler = (io: Server) => {
                             const timeOut = setTimeout(async () => {
                                 try {
                                     console.log("timeout fired, domain was:", domain, "incrementing to:", domain + 1)
+                                    clearTimeout(timeoutMap.get(profileId))
                                     timeoutMap.delete(profileId)
                                     domain++
 
-                                    socket.emit('searching_domain', { domain: domain });
+                                    socket.emit('searching_domain', { domain: domain, duration: domain === 3 ? 60 : getDuration(domain, currentDomain) });
 
                                     // fallback at random
                                     if (domain === 3) {
@@ -187,7 +195,7 @@ const roomHandler = (io: Server) => {
                                             } catch (err) {
                                                 console.error(err)
                                             }
-                                        }, 40000)
+                                        }, 60000)
                                         timeoutMap.set(profileId, randomTimeout)
                                         return
                                     }
@@ -197,7 +205,6 @@ const roomHandler = (io: Server) => {
                                         ...(domain === 2 && { filterByYear: false, filterYearData: null, filterByFieldOfStudy: true, filterFieldOfStudyData: profile.fieldOfStudy, currentDomain: 2 }),
                                     })
 
-                                    //socket.emit('searching_domain', { domain })
                                     await tryFilterMatch()
                                 } catch (err) {
                                     console.error(err)
@@ -243,7 +250,6 @@ const roomHandler = (io: Server) => {
                 const socketData = socketRoomMap.get(socket.id)
 
                 if (!socketData) {
-                    // user disconnected while waiting, not in a call
                     const waitingUser = await prisma.waitingUser.findFirst({
                         where: { socketId: socket.id }
                     })
@@ -264,7 +270,6 @@ const roomHandler = (io: Server) => {
                 const remainingSocketId = remainingSocket?.id
 
                 if (!remainingSocketId) {
-                    // no one left in room, just clean up
                     await endSession(roomId)
                     socketRoomMap.delete(socket.id)
                     return
