@@ -12,8 +12,11 @@ export default function VideoTitle({ stream, label, muted = false }: Props) {
     const videoRef = useRef<HTMLVideoElement>(null)
 
     useEffect(() => {
-        if (videoRef.current && stream) {
+        if (videoRef.current) {
             videoRef.current.srcObject = stream
+            if (stream) {
+                videoRef.current.play().catch(console.error)
+            }
         }
     }, [stream])
 

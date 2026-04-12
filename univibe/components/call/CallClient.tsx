@@ -14,25 +14,26 @@ type Mode = "waiting" | "connected" | "skipped" | "peer-left"
 type Props = {
     profileId: string
     roomId: string
+    isInitiator: boolean
 }
 
-export default function CallClient({ profileId, roomId }: Props) {
+export default function CallClient({ profileId, roomId, isInitiator }: Props) {
     const router = useRouter()
     const socket = useSocket()
     const { localStream, remoteStream, filters, currentDomain, reset, setRemoteStream } = useCallStore()
     const [mode, setMode] = useState<Mode>("waiting")
     const [checking, setChecking] = useState(true)
 
-    useWebRTC(socket, roomId)
+    useWebRTC(socket, roomId, isInitiator)
 
     // redirect home on refresh
     useEffect(() => {
-        const fromHome = sessionStorage.getItem("fromHome")
-        if (!fromHome) {
+        const fromConnecting = sessionStorage.getItem("fromConnecting")
+        if (!fromConnecting) {
             router.push("/home")
             return
         }
-        sessionStorage.removeItem("fromHome")
+        sessionStorage.removeItem("fromConnecting")
         setChecking(false)
     }, [])
 
@@ -46,6 +47,7 @@ export default function CallClient({ profileId, roomId }: Props) {
     }, [])
 
     useEffect(() => {
+        console.log("remoteStream changed:", remoteStream)
         if (remoteStream) {
             setMode("connected")
         }
@@ -125,6 +127,7 @@ export default function CallClient({ profileId, roomId }: Props) {
                             {/* Bottom — Local video */}
                             <ResizablePanel defaultSize={40} minSize={20}>
                                 <VideoTile
+                                    key={remoteStream?.id ?? "remote"}
                                     stream={localStream}
                                     label="You"
                                     muted={true}

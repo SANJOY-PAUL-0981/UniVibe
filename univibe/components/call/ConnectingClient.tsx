@@ -122,9 +122,10 @@ export default function ConnectingClient({ profileId, filters, currentDomain }: 
             setMessage(domainMessages[domain] ?? "Looking for someone...")
         })
 
-        socket.on("match_found", ({ roomId }: { roomId: string }) => {
+        socket.on("match_found", ({ roomId, isInitiator }: { roomId: string, isInitiator: boolean }) => {
             setRoomId(roomId)
             setCallStatus("connected")
+            sessionStorage.setItem("fromConnecting", "true")
 
             const params = new URLSearchParams()
             params.set("currentDomain", String(currentDomain))
@@ -136,7 +137,8 @@ export default function ConnectingClient({ profileId, filters, currentDomain }: 
             params.set("filterFieldOfStudyData", filters.filterFieldOfStudyData)
             params.set("filterByYear", String(filters.filterByYear))
             params.set("filterYearData", filters.filterYearData)
-
+            
+            params.set("isInitiator", String(isInitiator))
             router.replace(`/call/${roomId}?${params.toString()}`)
         })
 

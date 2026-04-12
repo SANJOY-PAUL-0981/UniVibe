@@ -68,7 +68,13 @@ const roomHandler = (io: Server) => {
                     timeoutMap.delete(match.session.profile2Id)
 
                     io.to(match.matchedSocketId).socketsJoin(roomId)
-                    io.to(roomId).emit('match_found', { roomId })
+                    //io.to(roomId).emit('match_found', { roomId })
+                    socket.emit('match_found', { roomId, isInitiator: true })
+                    io.to(match.matchedSocketId).emit('match_found', { roomId, isInitiator: false })
+                    setTimeout(() => {
+                        io.to(roomId).emit("ready")
+                    }, 5000) // both works but efficiency high in the bottom one but sometimes bugs
+                    /*io.to(roomId).emit("ready")*/
                 } else {
                     const profile = await prisma.profile.findUnique({
                         where: { id: profileId }
@@ -106,7 +112,13 @@ const roomHandler = (io: Server) => {
 
                             socket.join(roomId)
                             io.to(matchWithGender.matchedSocketId).socketsJoin(roomId)
-                            io.to(roomId).emit('match_found', { roomId })
+                            //io.to(roomId).emit('match_found', { roomId })
+                            socket.emit('match_found', { roomId, isInitiator: true })
+                            io.to(matchWithGender.matchedSocketId).emit('match_found', { roomId, isInitiator: false })
+                            setTimeout(() => {
+                                io.to(roomId).emit("ready")
+                            }, 5000) // both works but efficiency high in the bottom one but sometimes bugs
+                            /*io.to(roomId).emit("ready")*/
                             return
                         }
 
@@ -149,11 +161,17 @@ const roomHandler = (io: Server) => {
 
                                 socket.join(roomId)
                                 io.to(matchWithFilter.matchedSocketId).socketsJoin(roomId)
-                                io.to(roomId).emit('match_found', { roomId })
+                                //io.to(roomId).emit('match_found', { roomId })
+                                socket.emit('match_found', { roomId, isInitiator: true })
+                                io.to(matchWithFilter.matchedSocketId).emit('match_found', { roomId, isInitiator: false })
+                                setTimeout(() => {
+                                    io.to(roomId).emit("ready")
+                                }, 5000) // both works but efficiency high in the bottom one but sometimes bugs
+                                /*io.to(roomId).emit("ready")*/
                                 return
                             }
 
-                            const waitTime = domain === currentDomain ? 20000 : 10000
+                            const waitTime = domain === currentDomain ? 50000 : 10000
                             socket.emit('waiting', { message: 'Looking for someone with matching interests...' })
 
                             const timeOut = setTimeout(async () => {
@@ -182,7 +200,13 @@ const roomHandler = (io: Server) => {
 
                                             socket.join(roomId)
                                             io.to(randomMatchResult.matchedSocketId).socketsJoin(roomId)
-                                            io.to(roomId).emit('match_found', { roomId })
+                                            //io.to(roomId).emit('match_found', { roomId })
+                                            socket.emit('match_found', { roomId, isInitiator: true })
+                                            io.to(randomMatchResult.matchedSocketId).emit('match_found', { roomId, isInitiator: false })
+                                            setTimeout(() => {
+                                                io.to(roomId).emit("ready")
+                                            }, 5000) // both works but efficiency high in the bottom one but sometimes bugs
+                                            /*io.to(roomId).emit("ready")*/
                                             return
                                         }
 
