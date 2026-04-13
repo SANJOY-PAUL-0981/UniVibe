@@ -15,7 +15,7 @@ export const useWebRTC = (socket: Socket, roomId: string | null, isInitiator: bo
                 stream = existingStream
             } else {
                 stream = await navigator.mediaDevices.getUserMedia({
-                    video: true,
+                    video: false,
                     audio: true
                 })
                 setLocalStream(stream)
@@ -112,7 +112,7 @@ export const useWebRTC = (socket: Socket, roomId: string | null, isInitiator: bo
 
             socket.off("ready")
 
-            setTimeout(async () => {
+            /*setTimeout(async () => {
                 if (!pc.current || !isInitiator) return
 
                 console.log("Fallback offer trigger")
@@ -124,19 +124,19 @@ export const useWebRTC = (socket: Socket, roomId: string | null, isInitiator: bo
                     roomId,
                     signal: { type: "offer", sdp: offer.sdp }
                 })
-            }, 5000)
-            /*socket.on("ready", async () => {
-                console.log("Ready event received, isInitiator:", isInitiator)
+            }, 5000)*/
+            socket.on("ready", async () => {
                 if (!isInitiator || !pc.current) return
 
                 const offer = await pc.current.createOffer()
                 await pc.current.setLocalDescription(offer)
-                console.log("Sending offer SDP:", offer.sdp)
+
                 socket.emit("signal", {
                     roomId,
                     signal: { type: "offer", sdp: offer.sdp }
                 })
-            })*/
+            })
+            socket.emit("client_ready", { roomId })
 
         } catch (err) {
             console.error(err)
@@ -147,6 +147,7 @@ export const useWebRTC = (socket: Socket, roomId: string | null, isInitiator: bo
         pc.current?.close()
         pc.current = null
         socket.off("ready")
+        socket.off("signal")
     }
 
     useEffect(() => {

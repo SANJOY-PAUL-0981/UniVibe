@@ -13,6 +13,7 @@ import { prisma } from "../lib/prisma.js";
 const roomHandler = (io: Server) => {
     const timeoutMap = new Map<string, NodeJS.Timeout>()
     const socketRoomMap = new Map<string, { roomId: string, profileId: string }>()
+    const readyMap = new Map<string, Set<string>>()
 
     io.on('connection', (socket) => {
         socket.on('join', async ({ profileId, filters, currentDomain }) => {
@@ -71,10 +72,10 @@ const roomHandler = (io: Server) => {
                     //io.to(roomId).emit('match_found', { roomId })
                     socket.emit('match_found', { roomId, isInitiator: true })
                     io.to(match.matchedSocketId).emit('match_found', { roomId, isInitiator: false })
-                    setTimeout(() => {
+                    /*setTimeout(() => {
                         io.to(roomId).emit("ready")
-                    }, 5000) // both works but efficiency high in the bottom one but sometimes bugs
-                    /*io.to(roomId).emit("ready")*/
+                    }, 5000)*/ // both works but efficiency high in the bottom one but sometimes bugs
+                    //io.to(roomId).emit("ready")
                 } else {
                     const profile = await prisma.profile.findUnique({
                         where: { id: profileId }
@@ -115,10 +116,10 @@ const roomHandler = (io: Server) => {
                             //io.to(roomId).emit('match_found', { roomId })
                             socket.emit('match_found', { roomId, isInitiator: true })
                             io.to(matchWithGender.matchedSocketId).emit('match_found', { roomId, isInitiator: false })
-                            setTimeout(() => {
+                            /*setTimeout(() => {
                                 io.to(roomId).emit("ready")
-                            }, 5000) // both works but efficiency high in the bottom one but sometimes bugs
-                            /*io.to(roomId).emit("ready")*/
+                            }, 5000)*/ // both works but efficiency high in the bottom one but sometimes bugs
+                            //io.to(roomId).emit("ready")
                             return
                         }
 
@@ -164,10 +165,10 @@ const roomHandler = (io: Server) => {
                                 //io.to(roomId).emit('match_found', { roomId })
                                 socket.emit('match_found', { roomId, isInitiator: true })
                                 io.to(matchWithFilter.matchedSocketId).emit('match_found', { roomId, isInitiator: false })
-                                setTimeout(() => {
+                                /*setTimeout(() => {
                                     io.to(roomId).emit("ready")
-                                }, 5000) // both works but efficiency high in the bottom one but sometimes bugs
-                                /*io.to(roomId).emit("ready")*/
+                                }, 5000)*/ // both works but efficiency high in the bottom one but sometimes bugs
+                                //io.to(roomId).emit("ready")
                                 return
                             }
 
@@ -203,10 +204,10 @@ const roomHandler = (io: Server) => {
                                             //io.to(roomId).emit('match_found', { roomId })
                                             socket.emit('match_found', { roomId, isInitiator: true })
                                             io.to(randomMatchResult.matchedSocketId).emit('match_found', { roomId, isInitiator: false })
-                                            setTimeout(() => {
+                                            /*setTimeout(() => {
                                                 io.to(roomId).emit("ready")
-                                            }, 5000) // both works but efficiency high in the bottom one but sometimes bugs
-                                            /*io.to(roomId).emit("ready")*/
+                                            }, 5000)*/ // both works but efficiency high in the bottom one but sometimes bugs
+                                            //io.to(roomId).emit("ready")
                                             return
                                         }
 
@@ -312,6 +313,24 @@ const roomHandler = (io: Server) => {
 
             } catch (err) {
                 console.error(err)
+            }
+        })
+
+        socket.on("client_ready", ({ roomId }) => {
+            if (!readyMap.has(roomId)) {
+                readyMap.set(roomId, new Set())
+            }
+
+            const set = readyMap.get(roomId)!
+            set.add(socket.id)
+
+            console.log("client_ready:", roomId, set.size)
+
+            if (set.size === 2) {
+                console.log("Both ready → emitting ready")
+
+                io.to(roomId).emit("ready")
+                readyMap.delete(roomId)
             }
         })
     })
