@@ -28,16 +28,16 @@ type Props = {
 export default function ConnectingClient({ profileId, filters, currentDomain }: Props) {
     const router = useRouter()
     const socket = useSocket()
-    const { setRoomId, setCallStatus } = useCallStore()
+    const { setRoomId, setCallStatus, setFilters } = useCallStore()
     const [message, setMessage] = useState("Looking for someone...")
     const [noMatch, setNoMatch] = useState(false)
     const [checking, setChecking] = useState(true)
     const [timeLeft, setTimeLeft] = useState(60)
     const intervalRef = useRef<NodeJS.Timeout | null>(null)
+    const noMatchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
     useWebRTC(socket, null)
 
-    // redirect home on refresh
     useEffect(() => {
         const fromHome = sessionStorage.getItem("fromHome")
         if (!fromHome) {
@@ -48,7 +48,6 @@ export default function ConnectingClient({ profileId, filters, currentDomain }: 
         setChecking(false)
     }, [])
 
-    // cleanup on page unload
     useEffect(() => {
         const handleBeforeUnload = () => {
             socket.disconnect()
@@ -71,12 +70,35 @@ export default function ConnectingClient({ profileId, filters, currentDomain }: 
         }, 1000)
     }
 
-    // start initial timer on mount
+    useEffect(() => {
+        setFilters({
+            filterByGender: filters.filterByGender,
+            filterGenderData: filters.filterGenderData,
+            filterByCollege: filters.filterByCollege,
+            filterCollegeData: filters.filterCollegeData,
+            filterByFieldOfStudy: filters.filterByFieldOfStudy,
+            filterFieldOfStudyData: filters.filterFieldOfStudyData,
+            filterByYear: filters.filterByYear,
+            filterYearData: filters.filterYearData,
+        }, currentDomain)
+    }, [])
+
     useEffect(() => {
         const isRandom = !filters.filterByCollege && !filters.filterByYear && !filters.filterByFieldOfStudy
         startTimer(isRandom ? 60 : 20)
         return () => {
             if (intervalRef.current) clearInterval(intervalRef.current)
+        }
+    }, [])
+
+    useEffect(() => {
+        noMatchTimeoutRef.current = setTimeout(() => {
+            setNoMatch(true)
+            setCallStatus("ended")
+        }, 120000)
+
+        return () => {
+            if (noMatchTimeoutRef.current) clearTimeout(noMatchTimeoutRef.current)
         }
     }, [])
 
@@ -89,6 +111,8 @@ export default function ConnectingClient({ profileId, filters, currentDomain }: 
         socket.off("no_match_found")
         socket.off("error")
 
+        const parsedYearData = filters.filterYearData ? parseInt(filters.filterYearData) : null
+
         socket.emit("join", {
             profileId,
             filters: {
@@ -99,14 +123,13 @@ export default function ConnectingClient({ profileId, filters, currentDomain }: 
                 filterByFieldOfStudy: filters.filterByFieldOfStudy,
                 filterFieldOfStudyData: filters.filterFieldOfStudyData,
                 filterByYear: filters.filterByYear,
-                filterYearData: filters.filterYearData ? parseInt(filters.filterYearData) : null,
+                filterYearData: parsedYearData,
             },
             currentDomain
         })
 
         socket.on("waiting", ({ message }: { message: string }) => {
             setCallStatus("waiting")
-            //setMessage(message)
         })
 
         socket.on("searching_domain", ({ domain, duration }: { domain: number, duration: number }) => {
@@ -123,23 +146,13 @@ export default function ConnectingClient({ profileId, filters, currentDomain }: 
         })
 
         socket.on("match_found", ({ roomId, isInitiator }: { roomId: string, isInitiator: boolean }) => {
+            if (noMatchTimeoutRef.current) clearTimeout(noMatchTimeoutRef.current)
+            
             setRoomId(roomId)
             setCallStatus("connected")
             sessionStorage.setItem("fromConnecting", "true")
 
-            const params = new URLSearchParams()
-            params.set("currentDomain", String(currentDomain))
-            params.set("filterByGender", String(filters.filterByGender))
-            params.set("filterGenderData", filters.filterGenderData)
-            params.set("filterByCollege", String(filters.filterByCollege))
-            params.set("filterCollegeData", filters.filterCollegeData)
-            params.set("filterByFieldOfStudy", String(filters.filterByFieldOfStudy))
-            params.set("filterFieldOfStudyData", filters.filterFieldOfStudyData)
-            params.set("filterByYear", String(filters.filterByYear))
-            params.set("filterYearData", filters.filterYearData)
-            
-            params.set("isInitiator", String(isInitiator))
-            router.replace(`/call/${roomId}?${params.toString()}`)
+            router.replace(`/call/${roomId}?isInitiator=${isInitiator}`)
         })
 
         socket.on("no_match_found", () => {
@@ -173,6 +186,7 @@ export default function ConnectingClient({ profileId, filters, currentDomain }: 
             message={message}
             timeLeft={timeLeft}
             onCancel={handleCancel}
+            showTimer={true}
         />
     )
 }

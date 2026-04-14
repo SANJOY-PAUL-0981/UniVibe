@@ -269,139 +269,12 @@ const roomHandler = (io: Server) => {
             }
         })
 
-        /*socket.on('disconnect', async () => {
-            try {
-                console.log('User disconnected:', socket.id)
-
-                const socketData = socketRoomMap.get(socket.id)
-
-                if (!socketData) {
-                    const waitingUser = await prisma.waitingUser.findFirst({
-                        where: { socketId: socket.id }
-                    })
-                    if (waitingUser) {
-                        clearTimeout(timeoutMap.get(waitingUser.profileId))
-                        timeoutMap.delete(waitingUser.profileId)
-                        await prisma.waitingUser.delete({
-                            where: { profileId: waitingUser.profileId }
-                        })
-                    }
-                    return
-                }
-
-                const { roomId, profileId } = socketData
-
-                const sockets = await io.in(roomId).fetchSockets()
-                const remainingSocket = sockets.find(s => s.id !== socket.id)
-                const remainingSocketId = remainingSocket?.id
-
-                if (!remainingSocketId) {
-                    await endSession(roomId)
-                    socketRoomMap.delete(socket.id)
-                    return
-                }
-
-                const result = await onDisconnected(roomId, profileId, remainingSocketId)
-                if (!result) return
-
-                io.to(remainingSocketId).emit('peer_disconnected')
-
-                socketRoomMap.delete(socket.id)
-                socketRoomMap.delete(remainingSocketId)
-
-                clearTimeout(timeoutMap.get(profileId))
-                timeoutMap.delete(profileId)
-
-            } catch (err) {
-                console.error(err)
-            }
-        })*/
-
-        /*socket.on('disconnect', async () => {
-            try {
-                console.log('User disconnected:', socket.id)
-
-                const socketData = socketRoomMap.get(socket.id)
-
-                if (!socketData) {
-                    const waitingUser = await prisma.waitingUser.findFirst({
-                        where: { socketId: socket.id }
-                    })
-
-                    if (waitingUser) {
-                        clearTimeout(timeoutMap.get(waitingUser.profileId))
-                        timeoutMap.delete(waitingUser.profileId)
-
-                        await prisma.waitingUser.deleteMany({
-                            where: { profileId: waitingUser.profileId }
-                        })
-                    }
-
-                    return
-                }
-
-                const { roomId, profileId } = socketData
-
-                if (roomLock.has(roomId)) {
-                    await prisma.waitingUser.deleteMany({
-                        where: { socketId: socket.id }
-                    })
-                    return
-                }
-
-                roomLock.add(roomId)
-
-                try {
-                    const sockets = await io.in(roomId).fetchSockets()
-                    const remainingSocket = sockets.find(s => s.id !== socket.id)
-                    const remainingSocketId = remainingSocket?.id
-
-                    if (!remainingSocketId) {
-                        await endSession(roomId)
-                        socketRoomMap.delete(socket.id)
-                    } else {
-                        const result = await onDisconnected(
-                            roomId,
-                            profileId,
-                            remainingSocketId
-                        )
-
-                        if (result) {
-                            io.to(remainingSocketId).emit('peer_disconnected')
-                        }
-
-                        socketRoomMap.delete(socket.id)
-                        socketRoomMap.delete(remainingSocketId)
-                    }
-
-                    clearTimeout(timeoutMap.get(profileId))
-                    timeoutMap.delete(profileId)
-
-                } finally {
-                    roomLock.delete(roomId)
-                }
-
-                await prisma.waitingUser.deleteMany({
-                    where: {
-                        OR: [
-                            { socketId: socket.id },
-                            { profileId }
-                        ]
-                    }
-                })
-
-            } catch (err) {
-                console.error(err)
-            }
-        })*/
-
         socket.on('disconnect', async () => {
             try {
                 console.log('🔥 DISCONNECT:', socket.id)
 
                 const socketData = socketRoomMap.get(socket.id)
 
-                // ✅ CASE 1: user not in room
                 if (!socketData) {
                     const waitingUser = await prisma.waitingUser.findFirst({
                         where: { socketId: socket.id }
@@ -412,7 +285,6 @@ const roomHandler = (io: Server) => {
                         timeoutMap.delete(waitingUser.profileId)
                     }
 
-                    // ✅ cleanup self
                     await prisma.waitingUser.deleteMany({
                         where: { socketId: socket.id }
                     })
@@ -427,7 +299,6 @@ const roomHandler = (io: Server) => {
                 const remainingSocketId = remainingSocket?.id
 
                 if (!remainingSocketId) {
-                    // ✅ no one left → just delete session
                     await prisma.callSession.delete({
                         where: { roomId }
                     }).catch(() => { })
@@ -451,7 +322,6 @@ const roomHandler = (io: Server) => {
                 clearTimeout(timeoutMap.get(profileId))
                 timeoutMap.delete(profileId)
 
-                // ✅ FINAL CLEANUP (CRITICAL)
                 await prisma.waitingUser.deleteMany({
                     where: {
                         OR: [
@@ -461,7 +331,6 @@ const roomHandler = (io: Server) => {
                     }
                 })
 
-                // ✅ FINAL SESSION SAFETY (kills ghost sessions)
                 await prisma.callSession.delete({
                     where: { roomId }
                 }).catch(() => { })

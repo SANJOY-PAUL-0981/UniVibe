@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useSocket } from "@/hooks/useSocket"
 import { useWebRTC } from "@/hooks/useWebRTC"
@@ -8,8 +8,10 @@ import { useCallStore } from "@/store/useCallStore"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import VideoTile from "@/components/call/VideoTitle"
 import CallControls from "@/components/call/CallControls"
+import WaitingScreen from "@/components/call/WaitingScreen"
+import { NoMatchScreen } from "@/components/call/NoMatchScreen"
 
-type Mode = "waiting" | "connected" | "skipped" | "peer-left"
+type Mode = "waiting" | "connected"
 
 type Props = {
     profileId: string
@@ -20,13 +22,19 @@ type Props = {
 export default function CallClient({ profileId, roomId, isInitiator }: Props) {
     const router = useRouter()
     const socket = useSocket()
-    const { localStream, remoteStream, filters, currentDomain, reset, setRemoteStream } = useCallStore()
+    const { localStream, remoteStream, filters, currentDomain, reset, setRemoteStream, setRoomId } = useCallStore()
     const [mode, setMode] = useState<Mode>("waiting")
     const [checking, setChecking] = useState(true)
+    const [currentRoomId, setCurrentRoomId] = useState(roomId)
+    const [currentIsInitiator, setCurrentIsInitiator] = useState(isInitiator)
+    const [noMatch, setNoMatch] = useState(false)
+    const [reMatchTimeLeft, setReMatchTimeLeft] = useState(120) // 2 minutes
+    const skipInProgressRef = useRef(false)
+    const noMatchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+    const reMatchTimerRef = useRef<NodeJS.Timeout | null>(null)
 
-    useWebRTC(socket, roomId, isInitiator)
+    useWebRTC(socket, currentRoomId, currentIsInitiator)
 
-    // redirect home on refresh
     useEffect(() => {
         const fromConnecting = sessionStorage.getItem("fromConnecting")
         if (!fromConnecting) {
@@ -37,7 +45,6 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
         setChecking(false)
     }, [])
 
-    // cleanup on page unload
     useEffect(() => {
         const handleBeforeUnload = () => {
             socket.disconnect()
@@ -48,52 +55,96 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
 
     useEffect(() => {
         console.log("remoteStream changed:", remoteStream)
-        if (remoteStream) {
+        if (remoteStream && skipInProgressRef.current === false) {
             setMode("connected")
+            if (noMatchTimeoutRef.current) clearTimeout(noMatchTimeoutRef.current)
+            if (reMatchTimerRef.current) clearInterval(reMatchTimerRef.current)
         }
     }, [remoteStream])
 
     useEffect(() => {
+        if (!socket) return
+
+        socket.off("skipped")
+        socket.off("peer_disconnected")
+        socket.off("match_found")
+
         socket.on("skipped", () => {
+            console.log("Skipped! Waiting for next match...")
+            skipInProgressRef.current = true
             setRemoteStream(null)
-            setMode("skipped")
+            setMode("waiting")
+            setReMatchTimeLeft(120)
+
+            startReMatchTimer()
+
+            socket.emit("join", {
+                profileId,
+                filters,
+                currentDomain
+            })
         })
 
         socket.on("peer_disconnected", () => {
+            console.log("Peer disconnected! Waiting for next match...")
+            skipInProgressRef.current = true
             setRemoteStream(null)
-            setMode("peer-left")
+            setMode("waiting")
+            setReMatchTimeLeft(120)
+
+            startReMatchTimer()
+
+            socket.emit("join", {
+                profileId,
+                filters,
+                currentDomain
+            })
+        })
+
+        socket.on("match_found", ({ roomId: newRoomId, isInitiator: newIsInitiator }: { roomId: string, isInitiator: boolean }) => {
+            console.log("New match found! RoomId:", newRoomId, "IsInitiator:", newIsInitiator)
+            skipInProgressRef.current = false
+            setCurrentRoomId(newRoomId)
+            setCurrentIsInitiator(newIsInitiator)
+            setRoomId(newRoomId)
+
+            if (noMatchTimeoutRef.current) clearTimeout(noMatchTimeoutRef.current)
+            if (reMatchTimerRef.current) clearInterval(reMatchTimerRef.current)
         })
 
         return () => {
             socket.off("skipped")
             socket.off("peer_disconnected")
+            socket.off("match_found")
         }
-    }, [socket])
+    }, [socket, profileId, filters, currentDomain])
 
-    const buildConnectingParams = () => {
-        const params = new URLSearchParams()
-        params.set("currentDomain", String(currentDomain))
-        params.set("filterByGender", String(filters.filterByGender))
-        params.set("filterGenderData", filters.filterGenderData)
-        params.set("filterByCollege", String(filters.filterByCollege))
-        params.set("filterCollegeData", filters.filterCollegeData)
-        params.set("filterByFieldOfStudy", String(filters.filterByFieldOfStudy))
-        params.set("filterFieldOfStudyData", filters.filterFieldOfStudyData)
-        params.set("filterByYear", String(filters.filterByYear))
-        params.set("filterYearData", filters.filterYearData)
-        return params.toString()
+    const startReMatchTimer = () => {
+        if (reMatchTimerRef.current) clearInterval(reMatchTimerRef.current)
+        
+        noMatchTimeoutRef.current = setTimeout(() => {
+            setNoMatch(true)
+        }, 120000)
+
+        setReMatchTimeLeft(120)
+        reMatchTimerRef.current = setInterval(() => {
+            setReMatchTimeLeft(prev => {
+                if (prev <= 1) {
+                    clearInterval(reMatchTimerRef.current!)
+                    return 0
+                }
+                return prev - 1
+            })
+        }, 1000)
     }
 
     const handleSkip = () => {
-        socket.emit("skip", { roomId })
-    }
-
-    const handleNewCall = () => {
-        const params = buildConnectingParams()
-        router.push(`/call/connecting?${params}`)
+        socket.emit("skip", { roomId: currentRoomId })
     }
 
     const handleDisconnect = () => {
+        if (noMatchTimeoutRef.current) clearTimeout(noMatchTimeoutRef.current)
+        if (reMatchTimerRef.current) clearInterval(reMatchTimerRef.current)
         socket.disconnect()
         reset()
         router.push("/home")
@@ -101,19 +152,30 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
 
     if (checking) return null
 
+    if (noMatch) {
+        return <NoMatchScreen />
+    }
+
+    if (mode === "waiting") {
+        return (
+            <WaitingScreen
+                message="Looking for next person..."
+                timeLeft={reMatchTimeLeft}
+                onCancel={handleDisconnect}
+                showTimer={true}
+            />
+        )
+    }
 
     return (
         <div className="h-screen w-full flex flex-col">
             <ResizablePanelGroup orientation="horizontal" className="flex-1">
 
-                {/* Left — Videos + Controls */}
                 <ResizablePanel defaultSize={40} minSize={20}>
                     <div className="flex flex-col h-full">
 
-                        {/* Videos */}
                         <ResizablePanelGroup orientation="vertical" className="flex-1">
 
-                            {/* Top — Remote video */}
                             <ResizablePanel defaultSize={60} minSize={30}>
                                 <VideoTile
                                     stream={remoteStream}
@@ -124,7 +186,6 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
 
                             <ResizableHandle withHandle />
 
-                            {/* Bottom — Local video */}
                             <ResizablePanel defaultSize={40} minSize={20}>
                                 <VideoTile
                                     key={remoteStream?.id ?? "remote"}
@@ -136,13 +197,10 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
 
                         </ResizablePanelGroup>
 
-                        {/* Controls */}
                         <CallControls
                             mode={mode}
                             onSkip={handleSkip}
-                            onNewCall={handleNewCall}
                             onDisconnect={handleDisconnect}
-                            onCancel={handleDisconnect}
                         />
 
                     </div>
@@ -150,7 +208,6 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
 
                 <ResizableHandle withHandle />
 
-                {/* Right — Chat shell */}
                 <ResizablePanel defaultSize={60} minSize={30}>
                     <div className="h-full w-full flex flex-col border-l border-border/50">
                         <div className="p-4 border-b border-border/50">

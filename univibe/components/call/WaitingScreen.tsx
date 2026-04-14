@@ -10,9 +10,10 @@ type Props = {
     message: string
     timeLeft: number
     onCancel: () => void
+    showTimer?: boolean
 }
 
-export default function WaitingScreen({ message, onCancel, timeLeft }: Props) {
+export default function WaitingScreen({ message, onCancel, timeLeft, showTimer = true }: Props) {
     const { localStream } = useCallStore()
 
     return (
@@ -24,12 +25,11 @@ export default function WaitingScreen({ message, onCancel, timeLeft }: Props) {
 
                         <ResizablePanelGroup orientation="vertical" className="flex-1">
 
-                            {/* Top: Remote */}
                             <ResizablePanel defaultSize={40} minSize={20}>
                                 <div className="relative h-full w-full bg-zinc-900 flex flex-col items-center justify-center gap-3">
                                     <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
                                     <p className="text-sm text-zinc-400">{message}</p>
-                                    <p className="text-xs text-zinc-500">{timeLeft}s</p>
+                                    {showTimer && <p className="text-xs text-zinc-500">{timeLeft}s</p>}
                                     <span className="absolute top-3 left-3 text-xs text-zinc-500 font-medium">
                                         Stranger
                                     </span>
@@ -38,7 +38,6 @@ export default function WaitingScreen({ message, onCancel, timeLeft }: Props) {
 
                             <ResizableHandle withHandle />
 
-                            {/* Bottom: Local*/}
                             <ResizablePanel defaultSize={40} minSize={20}>
                                 <VideoTile
                                     stream={localStream}
@@ -49,7 +48,6 @@ export default function WaitingScreen({ message, onCancel, timeLeft }: Props) {
 
                         </ResizablePanelGroup>
 
-                        {/* Controls */}
                         <div className="flex items-center justify-center p-4 border-t border-border/50">
                             <Button variant="destructive" onClick={onCancel}>
                                 Cancel
@@ -61,7 +59,6 @@ export default function WaitingScreen({ message, onCancel, timeLeft }: Props) {
 
                 <ResizableHandle withHandle />
 
-                {/* Chat (import component after creating) */}
                 <ResizablePanel defaultSize={70} minSize={30}>
                     <div className="h-full w-full flex flex-col border-l border-border/50">
                         <div className="p-4 border-b border-border/50">
