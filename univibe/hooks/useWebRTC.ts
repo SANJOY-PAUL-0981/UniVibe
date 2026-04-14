@@ -37,7 +37,6 @@ export const useWebRTC = (socket: Socket, roomId: string | null, isInitiator: bo
 
             pc.current.onicecandidate = (event) => {
                 if (event.candidate) {
-                    console.log("ICE candidate:", event.candidate)
                     socket.emit("signal", {
                         roomId,
                         signal: { type: "ice-candidate", candidate: event.candidate }
@@ -48,7 +47,6 @@ export const useWebRTC = (socket: Socket, roomId: string | null, isInitiator: bo
             }
 
             pc.current.ontrack = (event) => {
-                console.log("Remote track received:", event.track)
                 if (event.streams && event.streams[0]) {
                     setRemoteStream(event.streams[0])
                 } else {
@@ -75,9 +73,6 @@ export const useWebRTC = (socket: Socket, roomId: string | null, isInitiator: bo
             socket.off("signal")
 
             socket.on("signal", async ({ signal }) => {
-                console.log("Signal received:", signal.type ?? "ice-candidate")
-                console.log("pc.current:", pc.current)
-
                 if (!pc.current) {
                     console.log("pc.current is null, ignoring signal")
                     return
@@ -89,7 +84,6 @@ export const useWebRTC = (socket: Socket, roomId: string | null, isInitiator: bo
                     )
                     const answer = await pc.current.createAnswer()
                     await pc.current.setLocalDescription(answer)
-                    console.log("Sending answer SDP:", answer.sdp)
                     socket.emit("signal", {
                         roomId,
                         signal: { type: "answer", sdp: answer.sdp }
@@ -97,7 +91,6 @@ export const useWebRTC = (socket: Socket, roomId: string | null, isInitiator: bo
                 }
 
                 if (signal.type === "answer") {
-                    console.log("Answer SDP:", signal.sdp)
                     await pc.current.setRemoteDescription(
                         new RTCSessionDescription({ type: "answer", sdp: signal.sdp })
                     )

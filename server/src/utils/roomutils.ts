@@ -146,17 +146,13 @@ export const randomMatch = async (profileId: string) => {
 }
 
 export const endSession = async (roomId: string) => {
-    const session = await prisma.callSession.findUnique({
+    const session = await prisma.callSession.delete({
         where: { roomId }
-    })
+    }).catch(() => null)
 
     if (!session) {
         return null
     }
-
-    await prisma.callSession.delete({
-        where: { roomId }
-    })
 
     return {
         profile1Id: session.profile1Id,
@@ -310,10 +306,12 @@ export const onSkip = async (roomId: string, p1SocketId: string, p2SocketId: str
     }
 }
 
-export const onDisconnected = async (roomId: string, disconnectedProfileId: string, remainingSocketId: string) => {
+/*export const onDisconnected = async (roomId: string, disconnectedProfileId: string, remainingSocketId: string) => {
     const session = await endSession(roomId)
 
-    if (!session) return null
+    if (!session) {
+        return null
+    }
 
     const remainingProfileId = session.profile1Id === disconnectedProfileId
         ? session.profile2Id
@@ -323,13 +321,103 @@ export const onDisconnected = async (roomId: string, disconnectedProfileId: stri
         ? session.p2Prefs
         : session.p1Prefs
 
-    await requeueOne(remainingProfileId, remainingSocketId, remainingPrefs)
+    //await requeueOne(remainingProfileId, remainingSocketId, remainingPrefs)
+    await prisma.waitingUser.create({
+        data: {
+            profileId: remainingProfileId,
+            socketId: remainingSocketId,
+            ...remainingPrefs,
+            originalFilterByGender: remainingPrefs.filterByGender,
+            originalFilterGenderData: remainingPrefs.filterGenderData,
+            originalFilterByCollege: remainingPrefs.filterByCollege,
+            originalFilterCollegeData: remainingPrefs.filterCollegeData,
+            originalFilterByFieldOfStudy: remainingPrefs.filterByFieldOfStudy,
+            originalFilterFieldOfStudyData: remainingPrefs.filterFieldOfStudyData,
+            originalFilterByYear: remainingPrefs.filterByYear,
+            originalFilterYearData: remainingPrefs.filterYearData,
+            originalCurrentDomain: remainingPrefs.currentDomain
+        }
+    })
 
     return {
         success: true,
         remainingProfileId,
-        remainingPrefs
     }
+}*/
+
+export const onDisconnected = async (
+    roomId: string,
+    disconnectedProfileId: string,
+    remainingSocketId: string
+) => {
+    return await prisma.$transaction(async (tx) => {
+
+        const session = await tx.callSession.delete({
+            where: { roomId }
+        }).catch(() => null)
+
+        if (!session) return null
+
+        const p1Prefs = {
+            filterByGender: session.p1FilterByGender,
+            filterGenderData: session.p1FilterGenderData,
+            filterByCollege: session.p1FilterByCollege,
+            filterCollegeData: session.p1FilterCollegeData,
+            filterByFieldOfStudy: session.p1FilterByFieldOfStudy,
+            filterFieldOfStudyData: session.p1FilterFieldOfStudyData,
+            filterByYear: session.p1FilterByYear,
+            filterYearData: session.p1FilterYearData,
+            currentDomain: session.p1CurrentDomain
+        }
+
+        const p2Prefs = {
+            filterByGender: session.p2FilterByGender,
+            filterGenderData: session.p2FilterGenderData,
+            filterByCollege: session.p2FilterByCollege,
+            filterCollegeData: session.p2FilterCollegeData,
+            filterByFieldOfStudy: session.p2FilterByFieldOfStudy,
+            filterFieldOfStudyData: session.p2FilterFieldOfStudyData,
+            filterByYear: session.p2FilterByYear,
+            filterYearData: session.p2FilterYearData,
+            currentDomain: session.p2CurrentDomain
+        }
+
+        const remainingProfileId =
+            session.profile1Id === disconnectedProfileId
+                ? session.profile2Id
+                : session.profile1Id
+
+        const remainingPrefs =
+            session.profile1Id === disconnectedProfileId
+                ? p2Prefs
+                : p1Prefs
+
+        await tx.waitingUser.deleteMany({
+            where: { profileId: remainingProfileId }
+        })
+
+        await tx.waitingUser.create({
+            data: {
+                profileId: remainingProfileId,
+                socketId: remainingSocketId,
+                ...remainingPrefs,
+                originalFilterByGender: remainingPrefs.filterByGender,
+                originalFilterGenderData: remainingPrefs.filterGenderData,
+                originalFilterByCollege: remainingPrefs.filterByCollege,
+                originalFilterCollegeData: remainingPrefs.filterCollegeData,
+                originalFilterByFieldOfStudy: remainingPrefs.filterByFieldOfStudy,
+                originalFilterFieldOfStudyData: remainingPrefs.filterFieldOfStudyData,
+                originalFilterByYear: remainingPrefs.filterByYear,
+                originalFilterYearData: remainingPrefs.filterYearData,
+                originalCurrentDomain: remainingPrefs.currentDomain
+            }
+        })
+
+        return {
+            success: true,
+            remainingProfileId
+        }
+    })
 }
 
 export const filterMatch = async (
