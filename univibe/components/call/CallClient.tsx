@@ -94,6 +94,7 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
         socket.off("skipped")
         socket.off("peer_disconnected")
         socket.off("match_found")
+        socket.off("peer_skipping")
 
         socket.on("skipped", () => {
             console.log("Skipped! Waiting for next match...")
@@ -139,12 +140,24 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
             if (reMatchTimerRef.current) clearInterval(reMatchTimerRef.current)
         })
 
+        socket.on("peer_skipping", () => {
+            console.log("Peer is skipping...")
+
+            skipInProgressRef.current = true
+            setRemoteStream(null)
+            setMode("waiting")
+            setReMatchTimeLeft(120)
+
+            startReMatchTimer()
+        })
+
         listenerRegisteredRef.current = true
 
         return () => {
             socket.off("skipped")
             socket.off("peer_disconnected")
             socket.off("match_found")
+            socket.off("peer_skipping")
         }
     }, [socket])
 
@@ -167,10 +180,23 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
         }, 1000)
     }
 
+    /*const handleSkip = () => {
+        if (actionLocked || !canSkip) return
+
+        setActionLocked(true)
+        socket.emit("skip", { roomId: currentRoomId })
+    }*/
     const handleSkip = () => {
         if (actionLocked || !canSkip) return
 
         setActionLocked(true)
+
+        skipInProgressRef.current = true
+        setRemoteStream(null)
+        setMode("waiting")
+        setReMatchTimeLeft(120)
+        startReMatchTimer()
+
         socket.emit("skip", { roomId: currentRoomId })
     }
 

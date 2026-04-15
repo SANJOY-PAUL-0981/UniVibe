@@ -287,7 +287,7 @@ const roomHandler = (io: Server) => {
                         return
                     }
 
-                    // This now has the delay inside it
+                    socket.to(roomId).emit("peer_skipping")
                     const result = await onSkip(roomId, socket1Id, socket2Id)
                     if (result) {
                         profileCooldown.set(result.profile1Id, Date.now())

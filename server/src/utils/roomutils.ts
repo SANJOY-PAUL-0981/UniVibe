@@ -8,7 +8,7 @@ export const makeActive = async (profileId: string, socketId: string, filters: {
     filterByFieldOfStudy?: boolean,
     filterFieldOfStudyData?: string,
     filterByYear?: boolean,
-    filterYearData?: number
+    filterYearData?: number | string
     currentDomain?: number
 }) => {
     const alreadyWaiting = await prisma.waitingUser.findUnique({
@@ -45,6 +45,11 @@ export const makeActive = async (profileId: string, socketId: string, filters: {
         }
     }
 
+    const year =
+        filters.filterYearData === "" || filters.filterYearData === undefined
+            ? null
+            : Number(filters.filterYearData)
+
     const waitingUser = await prisma.waitingUser.create({
         data: {
             profileId,
@@ -56,8 +61,8 @@ export const makeActive = async (profileId: string, socketId: string, filters: {
             filterByGender: filters.filterByGender ?? false,
             filterGenderData: filters.filterGenderData,
             filterByYear: filters.filterByYear ?? false,
-            filterYearData: filters.filterYearData,
-            currentDomain: filters.currentDomain ?? 3, // 3 means random
+            filterYearData: year,
+            currentDomain: filters.currentDomain ?? 3,
 
             originalFilterByCollege: filters.filterByCollege ?? false,
             originalFilterCollegeData: filters.filterCollegeData,
@@ -66,8 +71,8 @@ export const makeActive = async (profileId: string, socketId: string, filters: {
             originalFilterByGender: filters.filterByGender ?? false,
             originalFilterGenderData: filters.filterGenderData,
             originalFilterByYear: filters.filterByYear ?? false,
-            originalFilterYearData: filters.filterYearData,
-            originalCurrentDomain: filters.currentDomain ?? 3, // 3 means random
+            originalFilterYearData: year,
+            originalCurrentDomain: filters.currentDomain ?? 3,
         }
     })
 
