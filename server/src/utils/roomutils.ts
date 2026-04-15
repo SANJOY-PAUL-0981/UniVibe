@@ -77,7 +77,15 @@ export const makeActive = async (profileId: string, socketId: string, filters: {
     }
 }
 
-export const randomMatch = async (profileId: string) => {
+export const randomMatch = async (profileId: string, profileCooldown: Map<string, number>) => {
+    const now = Date.now()
+
+    if (profileCooldown.has(profileId)) {
+        const last = profileCooldown.get(profileId)!
+        if (now - last < 2000) {
+            return null
+        }
+    }
     const match = await prisma.waitingUser.findFirst({
         where: {
             filterByCollege: false,
@@ -101,6 +109,36 @@ export const randomMatch = async (profileId: string) => {
 
     if (!initiatorData) {
         return null
+    }
+
+    const existingSession = await prisma.callSession.findFirst({
+        where: {
+            OR: [
+                {
+                    profile1Id: profileId,
+                    profile2Id: match.profileId
+                },
+                {
+                    profile1Id: match.profileId,
+                    profile2Id: profileId
+                }
+            ]
+        }
+    })
+
+    if (existingSession) {
+        console.log("✅ Reusing existing session:", existingSession.roomId)
+        await prisma.waitingUser.deleteMany({
+            where: {
+                profileId: { in: [profileId, match.profileId] }
+            }
+        })
+
+        return {
+            success: true,
+            session: existingSession,
+            matchedSocketId: match.socketId
+        }
     }
 
     const session = await prisma.callSession.create({
@@ -281,12 +319,39 @@ export const requeueOne = async (
     return { success: true }
 }
 
+/*export const onSkip = async (roomId: string, p1SocketId: string, p2SocketId: string) => {
+    const session = await endSession(roomId)
+
+    if (!session) {
+        return null
+    }
+
+    await requeueBoth(
+        session.profile1Id,
+        session.profile2Id,
+        p1SocketId,
+        p2SocketId,
+        session.p1Prefs,
+        session.p2Prefs
+    )
+
+    return {
+        success: true,
+        profile1Id: session.profile1Id,
+        profile2Id: session.profile2Id,
+        p1Prefs: session.p1Prefs,
+        p2Prefs: session.p2Prefs
+    }
+}*/
+
 export const onSkip = async (roomId: string, p1SocketId: string, p2SocketId: string) => {
     const session = await endSession(roomId)
 
     if (!session) {
         return null
     }
+
+    await new Promise(resolve => setTimeout(resolve, 2500))
 
     await requeueBoth(
         session.profile1Id,
@@ -384,6 +449,7 @@ export const onDisconnected = async (
 export const filterMatch = async (
     profileId: string,
     currentDomain: number,
+    profileCooldown: Map<string, number>,
     filters: { // for the function call on fallback
         filterByGender?: boolean,
         filterGenderData?: string
@@ -395,6 +461,15 @@ export const filterMatch = async (
         filterYearData?: number
     }
 ) => {
+    const now = Date.now()
+
+    if (profileCooldown.has(profileId)) {
+        const last = profileCooldown.get(profileId)!
+        if (now - last < 2000) {
+            console.log("⏳ Cooldown active (filterMatch)")
+            return null
+        }
+    }
 
     type Domain = 0 | 1 | 2;
 
@@ -482,6 +557,36 @@ export const filterMatch = async (
 
     if (!match) {
         return null
+    }
+
+    const existingSession = await prisma.callSession.findFirst({
+        where: {
+            OR: [
+                {
+                    profile1Id: profileId,
+                    profile2Id: match.profileId
+                },
+                {
+                    profile1Id: match.profileId,
+                    profile2Id: profileId
+                }
+            ]
+        }
+    })
+
+    if (existingSession) {
+        console.log("✅ Reusing existing session:", existingSession.roomId)
+        await prisma.waitingUser.deleteMany({
+            where: {
+                profileId: { in: [profileId, match.profileId] }
+            }
+        })
+
+        return {
+            success: true,
+            session: existingSession,
+            matchedSocketId: match.socketId
+        }
     }
 
     const session = await prisma.callSession.create({

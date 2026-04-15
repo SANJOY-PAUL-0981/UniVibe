@@ -28,12 +28,37 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
     const [currentRoomId, setCurrentRoomId] = useState(roomId)
     const [currentIsInitiator, setCurrentIsInitiator] = useState(isInitiator)
     const [noMatch, setNoMatch] = useState(false)
-    const [reMatchTimeLeft, setReMatchTimeLeft] = useState(120) // 2 minutes
+    const [reMatchTimeLeft, setReMatchTimeLeft] = useState(120)
     const skipInProgressRef = useRef(false)
     const noMatchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
     const reMatchTimerRef = useRef<NodeJS.Timeout | null>(null)
+    const listenerRegisteredRef = useRef(false)
+    const [canSkip, setCanSkip] = useState(false)
+    const [cooldown, setCooldown] = useState(5)
+    const [actionLocked, setActionLocked] = useState(false)
+
 
     useWebRTC(socket, currentRoomId, currentIsInitiator)
+
+    useEffect(() => {
+        if (mode === "connected") {
+            setCanSkip(false)
+            setCooldown(5)
+
+            const interval = setInterval(() => {
+                setCooldown(prev => {
+                    if (prev <= 1) {
+                        clearInterval(interval)
+                        setCanSkip(true)
+                        return 0
+                    }
+                    return prev - 1
+                })
+            }, 1000)
+
+            return () => clearInterval(interval)
+        }
+    }, [mode])
 
     useEffect(() => {
         const fromConnecting = sessionStorage.getItem("fromConnecting")
@@ -64,6 +89,7 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
 
     useEffect(() => {
         if (!socket) return
+        if (listenerRegisteredRef.current) return
 
         socket.off("skipped")
         socket.off("peer_disconnected")
@@ -104,6 +130,7 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
         socket.on("match_found", ({ roomId: newRoomId, isInitiator: newIsInitiator }: { roomId: string, isInitiator: boolean }) => {
             console.log("New match found! RoomId:", newRoomId, "IsInitiator:", newIsInitiator)
             skipInProgressRef.current = false
+            setActionLocked(false)
             setCurrentRoomId(newRoomId)
             setCurrentIsInitiator(newIsInitiator)
             setRoomId(newRoomId)
@@ -112,16 +139,18 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
             if (reMatchTimerRef.current) clearInterval(reMatchTimerRef.current)
         })
 
+        listenerRegisteredRef.current = true
+
         return () => {
             socket.off("skipped")
             socket.off("peer_disconnected")
             socket.off("match_found")
         }
-    }, [socket, profileId, filters, currentDomain])
+    }, [socket])
 
     const startReMatchTimer = () => {
         if (reMatchTimerRef.current) clearInterval(reMatchTimerRef.current)
-        
+
         noMatchTimeoutRef.current = setTimeout(() => {
             setNoMatch(true)
         }, 120000)
@@ -139,6 +168,9 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
     }
 
     const handleSkip = () => {
+        if (actionLocked || !canSkip) return
+
+        setActionLocked(true)
         socket.emit("skip", { roomId: currentRoomId })
     }
 
@@ -201,6 +233,9 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
                             mode={mode}
                             onSkip={handleSkip}
                             onDisconnect={handleDisconnect}
+                            canSkip={canSkip}
+                            cooldown={cooldown}
+                            actionLocked={actionLocked}
                         />
 
                     </div>

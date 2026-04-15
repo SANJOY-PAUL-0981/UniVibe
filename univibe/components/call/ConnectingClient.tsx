@@ -111,7 +111,9 @@ export default function ConnectingClient({ profileId, filters, currentDomain }: 
         socket.off("no_match_found")
         socket.off("error")
 
-        const parsedYearData = filters.filterYearData ? parseInt(filters.filterYearData) : null
+        const parsedYearData = filters.filterYearData && filters.filterYearData.trim() !== ""
+            ? parseInt(filters.filterYearData)
+            : null
 
         socket.emit("join", {
             profileId,
@@ -147,7 +149,7 @@ export default function ConnectingClient({ profileId, filters, currentDomain }: 
 
         socket.on("match_found", ({ roomId, isInitiator }: { roomId: string, isInitiator: boolean }) => {
             if (noMatchTimeoutRef.current) clearTimeout(noMatchTimeoutRef.current)
-            
+
             setRoomId(roomId)
             setCallStatus("connected")
             sessionStorage.setItem("fromConnecting", "true")

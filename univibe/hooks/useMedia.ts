@@ -5,7 +5,7 @@ export const useMedia = () => {
 
   const getMedia = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: false,
+      video: true,
       audio: true
     })
 

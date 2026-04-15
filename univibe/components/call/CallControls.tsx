@@ -11,9 +11,12 @@ type Props = {
     mode: Mode
     onSkip: () => void
     onDisconnect: () => void
+    canSkip: boolean
+    cooldown: number
+    actionLocked: boolean
 }
 
-export default function CallControls({ mode, onSkip, onDisconnect }: Props) {
+export default function CallControls({ mode, onSkip, onDisconnect, canSkip, cooldown, actionLocked }: Props) {
     const { localStream } = useCallStore()
     const [micOn, setMicOn] = useState(true)
     const [camOn, setCamOn] = useState(true)
@@ -53,11 +56,17 @@ export default function CallControls({ mode, onSkip, onDisconnect }: Props) {
 
             {mode === "connected" && (
                 <>
-                    <Button variant="secondary" onClick={onSkip}>
-                        Skip
+                    <Button
+                        variant="secondary"
+                        onClick={onSkip}
+                        disabled={!canSkip || actionLocked}>
+                        {!canSkip ? `Skip (${cooldown})` : "Skip"}
                     </Button>
-                    <Button variant="destructive" onClick={onDisconnect}>
-                        Exit
+                    <Button
+                        variant="destructive"
+                        onClick={onDisconnect}
+                        disabled={!canSkip || actionLocked}>
+                        {!canSkip ? `Exit (${cooldown})` : "Exit"}
                     </Button>
                 </>
             )}

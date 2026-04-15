@@ -9,6 +9,7 @@ export const useWebRTC = (socket: Socket, roomId: string | null, isInitiator: bo
 
     const initConnection = async (isInitiator: boolean) => {
         try {
+            closeConnection()
             const existingStream = useCallStore.getState().localStream
             let stream: MediaStream
             if (existingStream) {
@@ -72,7 +73,7 @@ export const useWebRTC = (socket: Socket, roomId: string | null, isInitiator: bo
             // register signal listener AFTER pc is ready
             socket.off("signal")
 
-            socket.on("signal", async ({ signal }) => {
+            /*socket.on("signal", async ({ signal }) => {
                 if (!pc.current) {
                     console.log("pc.current is null, ignoring signal")
                     return
@@ -100,6 +101,54 @@ export const useWebRTC = (socket: Socket, roomId: string | null, isInitiator: bo
                     await pc.current.addIceCandidate(
                         new RTCIceCandidate(signal.candidate)
                     )
+                }
+            })*/
+            socket.on("signal", async ({ signal }) => {
+                console.log("Received signal:", signal.type, "PC state:", pc.current?.signalingState, "Connection state:", pc.current?.connectionState)
+                if (!pc.current) {
+                    console.log("pc.current is null, ignoring signal")
+                    return
+                }
+
+                try {
+                    // ✅ Check connection state before setting descriptions
+                    if (signal.type === "offer") {
+                        if (pc.current.signalingState !== "stable") {
+                            console.log("Ignoring offer, state:", pc.current.signalingState)
+                            return
+                        }
+                        await pc.current.setRemoteDescription(
+                            new RTCSessionDescription({ type: "offer", sdp: signal.sdp })
+                        )
+                        const answer = await pc.current.createAnswer()
+                        await pc.current.setLocalDescription(answer)
+                        socket.emit("signal", {
+                            roomId,
+                            signal: { type: "answer", sdp: answer.sdp }
+                        })
+                    }
+
+                    if (signal.type === "answer") {
+                        if (pc.current.signalingState !== "have-local-offer") {
+                            console.log("Ignoring answer, state:", pc.current.signalingState)
+                            return
+                        }
+                        await pc.current.setRemoteDescription(
+                            new RTCSessionDescription({ type: "answer", sdp: signal.sdp })
+                        )
+                    }
+
+                    if (signal.type === "ice-candidate") {
+                        try {
+                            await pc.current.addIceCandidate(
+                                new RTCIceCandidate(signal.candidate)
+                            )
+                        } catch (err) {
+                            console.log("ICE candidate error:", err)
+                        }
+                    }
+                } catch (err) {
+                    console.error("Signal handling error:", err)
                 }
             })
 
@@ -133,20 +182,25 @@ export const useWebRTC = (socket: Socket, roomId: string | null, isInitiator: bo
 
         } catch (err) {
             console.error(err)
+            closeConnection()
         }
     }
 
     const closeConnection = () => {
-        pc.current?.close()
-        pc.current = null
+        if (pc.current) {
+            pc.current.close()
+            pc.current = null
+        }
         socket.off("ready")
         socket.off("signal")
     }
 
     useEffect(() => {
         if (!socket) return
-        if (!roomId && isInitiator) return
+        if (!roomId) return
+
         initConnection(isInitiator)
+
         return () => closeConnection()
     }, [roomId])
 }

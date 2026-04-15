@@ -15,6 +15,7 @@ const roomHandler = (io: Server) => {
     const socketRoomMap = new Map<string, { roomId: string, profileId: string }>()
     const readyMap = new Map<string, Set<string>>()
     const roomLock = new Set<string>()
+    const profileCooldown = new Map<string, number>()
 
     io.on('connection', (socket) => {
         socket.on('join', async ({ profileId, filters, currentDomain }) => {
@@ -37,7 +38,7 @@ const roomHandler = (io: Server) => {
                     !activeUser.waitingUser.filterByYear
 
                 if (isRandom) {
-                    const match = await randomMatch(profileId)
+                    const match = await randomMatch(profileId, profileCooldown)
 
                     if (!match) {
                         socket.emit('waiting', { message: 'looking for someone...' })
@@ -99,7 +100,7 @@ const roomHandler = (io: Server) => {
 
                     if (isOnlyGender) {
                         socket.emit('searching_domain', { domain: 3, duration: 60 })
-                        const matchWithGender = await filterMatch(profileId, 3, filters)
+                        const matchWithGender = await filterMatch(profileId, 3, profileCooldown, filters)
 
                         if (matchWithGender) {
                             const roomId = matchWithGender.session.roomId
@@ -148,7 +149,7 @@ const roomHandler = (io: Server) => {
 
 
                         if (domain < 3) {
-                            const matchWithFilter = await filterMatch(profileId, domain, currentFilters)
+                            const matchWithFilter = await filterMatch(profileId, domain, profileCooldown,currentFilters)
 
                             if (matchWithFilter) {
                                 const roomId = matchWithFilter.session.roomId
@@ -187,7 +188,7 @@ const roomHandler = (io: Server) => {
 
                                     // fallback at random
                                     if (domain === 3) {
-                                        const randomMatchResult = await randomMatch(profileId)
+                                        const randomMatchResult = await randomMatch(profileId, profileCooldown)
 
                                         if (randomMatchResult) {
                                             const roomId = randomMatchResult.session.roomId
@@ -246,7 +247,7 @@ const roomHandler = (io: Server) => {
             }
         })
 
-        socket.on('skip', async ({ roomId }) => {
+        /*socket.on('skip', async ({ roomId }) => {
             try {
                 const sockets = await io.in(roomId).fetchSockets()
                 const socket1Id = sockets[0]?.id
@@ -266,6 +267,44 @@ const roomHandler = (io: Server) => {
             } catch (err) {
                 console.error(err);
 
+            }
+        })*/
+
+        socket.on('skip', async ({ roomId }) => {
+            try {
+                if (roomLock.has(roomId)) {
+                    return
+                }
+
+                roomLock.add(roomId)
+
+                try {
+                    const sockets = await io.in(roomId).fetchSockets()
+                    const socket1Id = sockets[0]?.id
+                    const socket2Id = sockets[1]?.id
+
+                    if (!socket1Id || !socket2Id) {
+                        return
+                    }
+
+                    // This now has the delay inside it
+                    const result = await onSkip(roomId, socket1Id, socket2Id)
+                    if (result) {
+                        profileCooldown.set(result.profile1Id, Date.now())
+                        profileCooldown.set(result.profile2Id, Date.now())
+                    }
+                    if (!result) return
+
+                    io.to(roomId).emit('skipped')
+                    io.socketsLeave(roomId)
+                    socketRoomMap.delete(socket1Id)
+                    socketRoomMap.delete(socket2Id)
+                } finally {
+                    roomLock.delete(roomId)
+                }
+            } catch (err) {
+                console.error(err)
+                roomLock.delete(roomId)
             }
         })
 
