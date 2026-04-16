@@ -95,7 +95,7 @@ export default function ConnectingClient({ profileId, filters, currentDomain }: 
         noMatchTimeoutRef.current = setTimeout(() => {
             setNoMatch(true)
             setCallStatus("ended")
-        }, 120000)
+        }, 60000)
 
         return () => {
             if (noMatchTimeoutRef.current) clearTimeout(noMatchTimeoutRef.current)

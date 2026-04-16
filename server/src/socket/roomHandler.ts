@@ -9,6 +9,7 @@ import {
     updateWaitingUser
 } from "../utils/roomutils.js"
 import { prisma } from "../lib/prisma.js";
+import type { MatchFilters } from "../utils/roomutils.js";
 
 const roomHandler = (io: Server) => {
     const timeoutMap = new Map<string, NodeJS.Timeout>()
@@ -141,15 +142,30 @@ const roomHandler = (io: Server) => {
                     socket.emit('searching_domain', { domain, duration: getDuration(domain, currentDomain) })
 
                     const tryFilterMatch = async () => {
-                        const currentFilters = {
+                        /*const currentFilters = {
                             ...filters,
                             ...(domain === 1 && { filterByCollege: false, filterCollegeData: null, filterByYear: true, filterYearData: profile.year }),
                             ...(domain === 2 && { filterByYear: false, filterYearData: null, filterByFieldOfStudy: true, filterFieldOfStudyData: profile.fieldOfStudy }),
+                        }*/
+
+                        const currentFilters: MatchFilters = {
+                            ...filters,
+                            ...(domain === 1 && {
+                                filterByCollege: false,
+                                filterCollegeData: null,
+                                filterByYear: true,
+                                filterYearData: profile.year
+                            }),
+                            ...(domain === 2 && {
+                                filterByYear: false,
+                                filterYearData: null,
+                                filterByFieldOfStudy: true,
+                                filterFieldOfStudyData: profile.fieldOfStudy
+                            })
                         }
 
-
                         if (domain < 3) {
-                            const matchWithFilter = await filterMatch(profileId, domain, profileCooldown,currentFilters)
+                            const matchWithFilter = await filterMatch(profileId, domain, profileCooldown, currentFilters)
 
                             if (matchWithFilter) {
                                 const roomId = matchWithFilter.session.roomId
@@ -227,10 +243,33 @@ const roomHandler = (io: Server) => {
                                         return
                                     }
 
-                                    await updateWaitingUser(profileId, {
+                                    /*await updateWaitingUser(profileId, {
                                         ...(domain === 1 && { filterByCollege: false, filterCollegeData: null, filterByYear: true, filterYearData: profile.year, currentDomain: 1 }),
                                         ...(domain === 2 && { filterByYear: false, filterYearData: null, filterByFieldOfStudy: true, filterFieldOfStudyData: profile.fieldOfStudy, currentDomain: 2 }),
-                                    })
+                                    })*/
+                                    let updatedData: any = {}
+
+                                    if (domain === 1) {
+                                        updatedData = {
+                                            filterByCollege: false,
+                                            filterCollegeData: null,
+                                            filterByYear: true,
+                                            filterYearData: profile.year,
+                                            currentDomain: 1
+                                        }
+                                    }
+
+                                    if (domain === 2) {
+                                        updatedData = {
+                                            filterByYear: false,
+                                            filterYearData: null,
+                                            filterByFieldOfStudy: true,
+                                            filterFieldOfStudyData: profile.fieldOfStudy,
+                                            currentDomain: 2
+                                        }
+                                    }
+
+                                    await updateWaitingUser(profileId, updatedData)
 
                                     await tryFilterMatch()
                                 } catch (err) {

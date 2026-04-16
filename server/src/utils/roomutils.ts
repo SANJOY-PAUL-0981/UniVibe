@@ -1,5 +1,16 @@
 import { prisma } from "../lib/prisma.js";
 
+export type MatchFilters = {
+    filterByGender?: boolean
+    filterGenderData?: string
+    filterByCollege?: boolean
+    filterCollegeData?: string
+    filterByFieldOfStudy?: boolean
+    filterFieldOfStudyData?: string
+    filterByYear?: boolean
+    filterYearData?: number | string | null
+}
+
 export const makeActive = async (profileId: string, socketId: string, filters: {
     filterByGender?: boolean,
     filterGenderData?: string
@@ -451,11 +462,11 @@ export const onDisconnected = async (
     }
 }
 
-export const filterMatch = async (
+/*export const filterMatch = async (
     profileId: string,
     currentDomain: number,
     profileCooldown: Map<string, number>,
-    filters: { // for the function call on fallback
+    filters: {
         filterByGender?: boolean,
         filterGenderData?: string
         filterByCollege?: boolean,
@@ -545,10 +556,15 @@ export const filterMatch = async (
             orderBy: { createdAt: "asc" }
         })
 
+        const yearFilter =
+            filters.filterYearData !== undefined && filters.filterYearData !== null
+                ? Number(filters.filterYearData)
+                : null
+
         match = candidates.find(c => {
             const domainMatch =
                 currentDomain === 0 ? c.profile.college === filters.filterCollegeData :
-                    currentDomain === 1 ? c.profile.year === filters.filterYearData :
+                    currentDomain === 1 ? c.profile.year === yearFilter :
                         currentDomain === 2 ? c.profile.fieldOfStudy === filters.filterFieldOfStudyData :
                             false
 
@@ -627,6 +643,136 @@ export const filterMatch = async (
         where: {
             profileId: { in: [profileId, match.profileId] }
         }
+    })
+
+    return {
+        success: true,
+        session,
+        matchedSocketId: match.socketId
+    }
+}*/
+
+export const filterMatch = async (
+    profileId: string,
+    currentDomain: number,
+    profileCooldown: Map<string, number>,
+    filters: MatchFilters
+) => {
+    const now = Date.now()
+
+    if (profileCooldown.has(profileId)) {
+        const last = profileCooldown.get(profileId)!
+        if (now - last < 2000) {
+            console.log("⏳ Cooldown active (filterMatch)")
+            return null
+        }
+    }
+
+    const initiatorProfile = await prisma.profile.findUnique({
+        where: { id: profileId }
+    })
+
+    if (!initiatorProfile) return null
+
+    const initiatorData = await prisma.waitingUser.findUnique({
+        where: { profileId }
+    })
+
+    if (!initiatorData) return null
+
+    const yearFilter =
+        filters.filterYearData !== undefined && filters.filterYearData !== null
+            ? Number(filters.filterYearData)
+            : null
+
+    // Find a candidate who:
+    // 1. Wants the initiator's gender (if gender filter active) AND is the gender the initiator wants
+    // 2. Is filtering on the same domain value the initiator is filtering on
+    const match = await prisma.waitingUser.findFirst({
+        where: {
+            NOT: { profileId },
+
+            // Gender: candidate must want MY gender (initiatorProfile.gender)
+            // AND candidate must BE the gender I want (filters.filterGenderData)
+            ...(filters.filterByGender && {
+                filterByGender: true,
+                filterGenderData: initiatorProfile.gender,  // candidate is searching for my gender
+                profile: {
+                    gender: filters.filterGenderData         // candidate's actual gender = what I want
+                }
+            }),
+
+            // Domain: candidate must be filtering on the same value I'm filtering on
+            ...(currentDomain === 0 && {
+                filterByCollege: true,
+                filterCollegeData: filters.filterCollegeData  // candidate typed same college as me
+            }),
+
+            ...(currentDomain === 1 && {
+                filterByYear: true,
+                filterYearData: yearFilter                    // candidate filtering same year as me
+            }),
+
+            ...(currentDomain === 2 && {
+                filterByFieldOfStudy: true,
+                filterFieldOfStudyData: filters.filterFieldOfStudyData  // candidate filtering same field as me
+            })
+        },
+        orderBy: { createdAt: "asc" }
+    })
+
+    if (!match) return null
+
+    const existingSession = await prisma.callSession.findFirst({
+        where: {
+            OR: [
+                { profile1Id: profileId, profile2Id: match.profileId },
+                { profile1Id: match.profileId, profile2Id: profileId }
+            ]
+        }
+    })
+
+    if (existingSession) {
+        console.log("✅ Reusing existing session:", existingSession.roomId)
+        await prisma.waitingUser.deleteMany({
+            where: { profileId: { in: [profileId, match.profileId] } }
+        })
+        return {
+            success: true,
+            session: existingSession,
+            matchedSocketId: match.socketId
+        }
+    }
+
+    const session = await prisma.callSession.create({
+        data: {
+            profile1Id: profileId,
+            profile2Id: match.profileId,
+
+            p1CurrentDomain: initiatorData.originalCurrentDomain,
+            p1FilterByCollege: initiatorData.originalFilterByCollege,
+            p1FilterCollegeData: initiatorData.originalFilterCollegeData,
+            p1FilterByFieldOfStudy: initiatorData.originalFilterByFieldOfStudy,
+            p1FilterFieldOfStudyData: initiatorData.originalFilterFieldOfStudyData,
+            p1FilterByGender: initiatorData.originalFilterByGender,
+            p1FilterGenderData: initiatorData.originalFilterGenderData,
+            p1FilterByYear: initiatorData.originalFilterByYear,
+            p1FilterYearData: initiatorData.originalFilterYearData,
+
+            p2CurrentDomain: match.originalCurrentDomain,
+            p2FilterByCollege: match.originalFilterByCollege,
+            p2FilterCollegeData: match.originalFilterCollegeData,
+            p2FilterByFieldOfStudy: match.originalFilterByFieldOfStudy,
+            p2FilterFieldOfStudyData: match.originalFilterFieldOfStudyData,
+            p2FilterByGender: match.originalFilterByGender,
+            p2FilterGenderData: match.originalFilterGenderData,
+            p2FilterByYear: match.originalFilterByYear,
+            p2FilterYearData: match.originalFilterYearData
+        }
+    })
+
+    await prisma.waitingUser.deleteMany({
+        where: { profileId: { in: [profileId, match.profileId] } }
     })
 
     return {

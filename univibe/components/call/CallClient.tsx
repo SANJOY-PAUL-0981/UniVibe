@@ -28,7 +28,7 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
     const [currentRoomId, setCurrentRoomId] = useState(roomId)
     const [currentIsInitiator, setCurrentIsInitiator] = useState(isInitiator)
     const [noMatch, setNoMatch] = useState(false)
-    const [reMatchTimeLeft, setReMatchTimeLeft] = useState(120)
+    const [reMatchTimeLeft, setReMatchTimeLeft] = useState(60)
     const skipInProgressRef = useRef(false)
     const noMatchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
     const reMatchTimerRef = useRef<NodeJS.Timeout | null>(null)
@@ -101,7 +101,7 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
             skipInProgressRef.current = true
             setRemoteStream(null)
             setMode("waiting")
-            setReMatchTimeLeft(120)
+            setReMatchTimeLeft(60)
 
             startReMatchTimer()
 
@@ -117,7 +117,7 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
             skipInProgressRef.current = true
             setRemoteStream(null)
             setMode("waiting")
-            setReMatchTimeLeft(120)
+            setReMatchTimeLeft(60)
 
             startReMatchTimer()
 
@@ -146,7 +146,7 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
             skipInProgressRef.current = true
             setRemoteStream(null)
             setMode("waiting")
-            setReMatchTimeLeft(120)
+            setReMatchTimeLeft(60)
 
             startReMatchTimer()
         })
@@ -166,9 +166,9 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
 
         noMatchTimeoutRef.current = setTimeout(() => {
             setNoMatch(true)
-        }, 120000)
+        }, 60000)
 
-        setReMatchTimeLeft(120)
+        setReMatchTimeLeft(60)
         reMatchTimerRef.current = setInterval(() => {
             setReMatchTimeLeft(prev => {
                 if (prev <= 1) {
@@ -194,7 +194,7 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
         skipInProgressRef.current = true
         setRemoteStream(null)
         setMode("waiting")
-        setReMatchTimeLeft(120)
+        setReMatchTimeLeft(60)
         startReMatchTimer()
 
         socket.emit("skip", { roomId: currentRoomId })
