@@ -130,7 +130,7 @@ model WaitingUser {
   originalFilterYearData         Int?
   originalCurrentDomain          Int     @default(3)
 
-  currentDomain Int @default(0) //0 = college | 2 = fieldofStudy | 3 = random
+  currentDomain Int @default(0) //0 = college | 1 = year | 2 = fieldofStudy | 3 = random
 
   createdAt DateTime @default(now())
 

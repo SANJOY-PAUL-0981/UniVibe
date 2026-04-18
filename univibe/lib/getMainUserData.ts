@@ -20,6 +20,7 @@ const readMainUser = (userId: string) =>
       email: true,
       profile: {
         select: {
+          id: true,
           username: true,
           profilePicture: true,
           gender: true,
