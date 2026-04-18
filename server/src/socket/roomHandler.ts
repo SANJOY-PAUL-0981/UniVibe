@@ -71,13 +71,8 @@ const roomHandler = (io: Server) => {
                     timeoutMap.delete(match.session.profile2Id)
 
                     io.to(match.matchedSocketId).socketsJoin(roomId)
-                    //io.to(roomId).emit('match_found', { roomId })
                     socket.emit('match_found', { roomId, isInitiator: true })
                     io.to(match.matchedSocketId).emit('match_found', { roomId, isInitiator: false })
-                    /*setTimeout(() => {
-                        io.to(roomId).emit("ready")
-                    }, 5000)*/ // both works but efficiency high in the bottom one but sometimes bugs
-                    //io.to(roomId).emit("ready")
                 } else {
                     const profile = await prisma.profile.findUnique({
                         where: { id: profileId }
@@ -91,7 +86,6 @@ const roomHandler = (io: Server) => {
                     }
 
                     let domain = currentDomain
-                    //socket.emit('searching_domain', { domain, duration: getDuration(domain, currentDomain) })
 
                     const isOnlyGender = filters.filterByGender &&
                         !filters.filterByCollege &&
@@ -115,13 +109,8 @@ const roomHandler = (io: Server) => {
 
                             socket.join(roomId)
                             io.to(matchWithGender.matchedSocketId).socketsJoin(roomId)
-                            //io.to(roomId).emit('match_found', { roomId })
                             socket.emit('match_found', { roomId, isInitiator: true })
                             io.to(matchWithGender.matchedSocketId).emit('match_found', { roomId, isInitiator: false })
-                            /*setTimeout(() => {
-                                io.to(roomId).emit("ready")
-                            }, 5000)*/ // both works but efficiency high in the bottom one but sometimes bugs
-                            //io.to(roomId).emit("ready")
                             return
                         }
 
@@ -141,19 +130,13 @@ const roomHandler = (io: Server) => {
                     socket.emit('searching_domain', { domain, duration: getDuration(domain, currentDomain) })
 
                     const tryFilterMatch = async () => {
-                        /*const currentFilters = {
-                            ...filters,
-                            ...(domain === 1 && { filterByCollege: false, filterCollegeData: null, filterByYear: true, filterYearData: profile.year }),
-                            ...(domain === 2 && { filterByYear: false, filterYearData: null, filterByFieldOfStudy: true, filterFieldOfStudyData: profile.fieldOfStudy }),
-                        }*/
-
                         const currentFilters: MatchFilters = {
                             ...filters,
                             ...(domain === 1 && {
                                 filterByCollege: false,
                                 filterCollegeData: null,
                                 filterByYear: true,
-                                filterYearData: filters.filterYearData ?? profile.year  // ← user value if exists, else profile
+                                filterYearData: filters.filterYearData ?? profile.year
                             }),
                             ...(domain === 2 && {
                                 filterByCollege: false,
@@ -161,12 +144,11 @@ const roomHandler = (io: Server) => {
                                 filterByYear: false,
                                 filterYearData: null,
                                 filterByFieldOfStudy: true,
-                                filterFieldOfStudyData: filters.filterFieldOfStudyData || profile.fieldOfStudy  // ← same
+                                filterFieldOfStudyData: filters.filterFieldOfStudyData || profile.fieldOfStudy
                             })
                         }
 
                         if (domain < 3) {
-                            console.log("tryFilterMatch — domain:", domain, "| currentFilters:", JSON.stringify(currentFilters))
                             const matchWithFilter = await filterMatch(profileId, domain, profileCooldown, currentFilters)
 
                             if (matchWithFilter) {
@@ -182,13 +164,8 @@ const roomHandler = (io: Server) => {
 
                                 socket.join(roomId)
                                 io.to(matchWithFilter.matchedSocketId).socketsJoin(roomId)
-                                //io.to(roomId).emit('match_found', { roomId })
                                 socket.emit('match_found', { roomId, isInitiator: true })
                                 io.to(matchWithFilter.matchedSocketId).emit('match_found', { roomId, isInitiator: false })
-                                /*setTimeout(() => {
-                                    io.to(roomId).emit("ready")
-                                }, 5000)*/ // both works but efficiency high in the bottom one but sometimes bugs
-                                //io.to(roomId).emit("ready")
                                 return
                             }
 
@@ -204,7 +181,6 @@ const roomHandler = (io: Server) => {
 
                                     socket.emit('searching_domain', { domain: domain, duration: domain === 3 ? 60 : getDuration(domain, currentDomain) });
 
-                                    // fallback at random
                                     if (domain === 3) {
                                         await updateWaitingUser(profileId, {
                                             filterByCollege: false,
@@ -233,13 +209,8 @@ const roomHandler = (io: Server) => {
 
                                             socket.join(roomId)
                                             io.to(randomMatchResult.matchedSocketId).socketsJoin(roomId)
-                                            //io.to(roomId).emit('match_found', { roomId })
                                             socket.emit('match_found', { roomId, isInitiator: true })
                                             io.to(randomMatchResult.matchedSocketId).emit('match_found', { roomId, isInitiator: false })
-                                            /*setTimeout(() => {
-                                                io.to(roomId).emit("ready")
-                                            }, 5000)*/ // both works but efficiency high in the bottom one but sometimes bugs
-                                            //io.to(roomId).emit("ready")
                                             return
                                         }
 
@@ -273,29 +244,6 @@ const roomHandler = (io: Server) => {
                                             currentDomain: 2
                                         })
                                     })
-                                    /*let updatedData: any = {}
-
-                                    if (domain === 1) {
-                                        updatedData = {
-                                            filterByCollege: false,
-                                            filterCollegeData: null,
-                                            filterByYear: true,
-                                            filterYearData: profile.year,
-                                            currentDomain: 1
-                                        }
-                                    }
-
-                                    if (domain === 2) {
-                                        updatedData = {
-                                            filterByYear: false,
-                                            filterYearData: null,
-                                            filterByFieldOfStudy: true,
-                                            filterFieldOfStudyData: profile.fieldOfStudy,
-                                            currentDomain: 2
-                                        }
-                                    }
-
-                                    await updateWaitingUser(profileId, updatedData)*/
 
                                     await tryFilterMatch()
                                 } catch (err) {
@@ -352,7 +300,7 @@ const roomHandler = (io: Server) => {
 
         socket.on('disconnect', async () => {
             try {
-                console.log('🔥 DISCONNECT:', socket.id)
+                console.log('DISCONNECTED:', socket.id)
 
                 const socketData = socketRoomMap.get(socket.id)
 

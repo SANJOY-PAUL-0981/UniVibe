@@ -143,7 +143,7 @@ export const randomMatch = async (profileId: string, profileCooldown: Map<string
     })
 
     if (existingSession) {
-        console.log("✅ Reusing existing session:", existingSession.roomId)
+        console.log("Reusing existing session:", existingSession.roomId)
         await prisma.waitingUser.deleteMany({
             where: {
                 profileId: { in: [profileId, match.profileId] }
@@ -335,39 +335,12 @@ export const requeueOne = async (
     return { success: true }
 }
 
-/*export const onSkip = async (roomId: string, p1SocketId: string, p2SocketId: string) => {
-    const session = await endSession(roomId)
-
-    if (!session) {
-        return null
-    }
-
-    await requeueBoth(
-        session.profile1Id,
-        session.profile2Id,
-        p1SocketId,
-        p2SocketId,
-        session.p1Prefs,
-        session.p2Prefs
-    )
-
-    return {
-        success: true,
-        profile1Id: session.profile1Id,
-        profile2Id: session.profile2Id,
-        p1Prefs: session.p1Prefs,
-        p2Prefs: session.p2Prefs
-    }
-}*/
-
 export const onSkip = async (roomId: string, p1SocketId: string, p2SocketId: string) => {
     const session = await endSession(roomId)
 
     if (!session) {
         return null
     }
-
-    //await new Promise(resolve => setTimeout(resolve, 2500))
 
     await requeueBoth(
         session.profile1Id,
@@ -462,196 +435,6 @@ export const onDisconnected = async (
     }
 }
 
-/*export const filterMatch = async (
-    profileId: string,
-    currentDomain: number,
-    profileCooldown: Map<string, number>,
-    filters: {
-        filterByGender?: boolean,
-        filterGenderData?: string
-        filterByCollege?: boolean,
-        filterCollegeData?: string
-        filterByFieldOfStudy?: boolean,
-        filterFieldOfStudyData?: string,
-        filterByYear?: boolean,
-        filterYearData?: number
-    }
-) => {
-    const now = Date.now()
-
-    if (profileCooldown.has(profileId)) {
-        const last = profileCooldown.get(profileId)!
-        if (now - last < 2000) {
-            console.log("⏳ Cooldown active (filterMatch)")
-            return null
-        }
-    }
-
-    type Domain = 0 | 1 | 2;
-
-    const isOnlyGender = filters.filterByGender &&
-        !filters.filterByCollege &&
-        !filters.filterByYear &&
-        !filters.filterByFieldOfStudy
-
-    const initiatorProfile = await prisma.profile.findUnique({
-        where: { id: profileId }
-    })
-
-    if (!initiatorProfile) {
-        return null
-    }
-
-    const initiatorData = await prisma.waitingUser.findUnique({
-        where: { profileId }
-    })
-
-    if (!initiatorData) {
-        return null
-    }
-
-    let match;
-
-    if (isOnlyGender) {
-        const candidates = await prisma.waitingUser.findMany({
-            where: {
-                filterByGender: true,
-                filterGenderData: initiatorProfile.gender,
-                NOT: { profileId }
-            },
-            include: {
-                profile: true
-            },
-            orderBy: {
-                createdAt: "asc"
-            }
-        })
-
-        match = candidates.find(c => c.profile.gender === filters.filterGenderData) ?? null
-    } else {
-        const domainMap: Record<Domain, object> = {
-            0: {
-                filterByCollege: true,
-                filterCollegeData: initiatorProfile.college,
-                ...(filters.filterByGender && { filterByGender: true, filterGenderData: initiatorProfile.gender })
-            },
-            1: {
-                filterByYear: true,
-                filterYearData: initiatorProfile.year,
-                ...(filters.filterByGender && { filterByGender: true, filterGenderData: initiatorProfile.gender })
-            },
-            2: {
-                filterByFieldOfStudy: true,
-                filterFieldOfStudyData: initiatorProfile.fieldOfStudy,
-                ...(filters.filterByGender && { filterByGender: true, filterGenderData: initiatorProfile.gender })
-            }
-        }
-
-        const candidates = await prisma.waitingUser.findMany({
-            where: {
-                ...domainMap[currentDomain as Domain],
-                NOT: { profileId }
-            },
-            include: { profile: true },
-            orderBy: { createdAt: "asc" }
-        })
-
-        const yearFilter =
-            filters.filterYearData !== undefined && filters.filterYearData !== null
-                ? Number(filters.filterYearData)
-                : null
-
-        match = candidates.find(c => {
-            const domainMatch =
-                currentDomain === 0 ? c.profile.college === filters.filterCollegeData :
-                    currentDomain === 1 ? c.profile.year === yearFilter :
-                        currentDomain === 2 ? c.profile.fieldOfStudy === filters.filterFieldOfStudyData :
-                            false
-
-            const genderMatch = filters.filterByGender
-                ? c.profile.gender === filters.filterGenderData
-                : true
-
-            return domainMatch && genderMatch
-        }) ?? null
-    }
-
-    if (!match) {
-        return null
-    }
-
-    const existingSession = await prisma.callSession.findFirst({
-        where: {
-            OR: [
-                {
-                    profile1Id: profileId,
-                    profile2Id: match.profileId
-                },
-                {
-                    profile1Id: match.profileId,
-                    profile2Id: profileId
-                }
-            ]
-        }
-    })
-
-    if (existingSession) {
-        console.log("✅ Reusing existing session:", existingSession.roomId)
-        await prisma.waitingUser.deleteMany({
-            where: {
-                profileId: { in: [profileId, match.profileId] }
-            }
-        })
-
-        return {
-            success: true,
-            session: existingSession,
-            matchedSocketId: match.socketId
-        }
-    }
-
-    const session = await prisma.callSession.create({
-        data: {
-            profile1Id: profileId,
-            profile2Id: match.profileId,
-
-            p1CurrentDomain: initiatorData.originalCurrentDomain,
-
-            p1FilterByCollege: initiatorData.originalFilterByCollege,
-            p1FilterCollegeData: initiatorData.originalFilterCollegeData,
-            p1FilterByFieldOfStudy: initiatorData.originalFilterByFieldOfStudy,
-            p1FilterFieldOfStudyData: initiatorData.originalFilterFieldOfStudyData,
-            p1FilterByGender: initiatorData.originalFilterByGender,
-            p1FilterGenderData: initiatorData.originalFilterGenderData,
-            p1FilterByYear: initiatorData.originalFilterByYear,
-            p1FilterYearData: initiatorData.originalFilterYearData,
-
-            p2CurrentDomain: match.originalCurrentDomain,
-
-            p2FilterByCollege: match.originalFilterByCollege,
-            p2FilterCollegeData: match.originalFilterCollegeData,
-            p2FilterByFieldOfStudy: match.originalFilterByFieldOfStudy,
-            p2FilterFieldOfStudyData: match.originalFilterFieldOfStudyData,
-            p2FilterByGender: match.originalFilterByGender,
-            p2FilterGenderData: match.originalFilterGenderData,
-            p2FilterByYear: match.originalFilterByYear,
-            p2FilterYearData: match.originalFilterYearData
-        }
-    })
-
-    await prisma.waitingUser.deleteMany({
-        where: {
-            profileId: { in: [profileId, match.profileId] }
-        }
-    })
-
-    return {
-        success: true,
-        session,
-        matchedSocketId: match.socketId
-    }
-}*/
-
 export const filterMatch = async (
     profileId: string,
     currentDomain: number,
@@ -663,7 +446,6 @@ export const filterMatch = async (
     if (profileCooldown.has(profileId)) {
         const last = profileCooldown.get(profileId)!
         if (now - last < 2000) {
-            console.log("⏳ Cooldown active (filterMatch)")
             return null
         }
     }
@@ -684,65 +466,45 @@ export const filterMatch = async (
         filters.filterYearData !== undefined && filters.filterYearData !== null
             ? Number(filters.filterYearData)
             : null
-    console.log("filterMatch called — domain:", currentDomain, "filters:", JSON.stringify(filters))
-    console.log("initiatorProfile.year:", initiatorProfile.year)
 
     const match = await prisma.waitingUser.findFirst({
         where: {
             NOT: { profileId },
 
-            // Gender: candidate must want MY gender AND be the gender I want
             ...(filters.filterByGender && {
                 filterByGender: true,
-                filterGenderData: initiatorProfile.gender,  // they want my gender
+                filterGenderData: initiatorProfile.gender,
                 profile: {
-                    gender: filters.filterGenderData         // they ARE my desired gender
+                    gender: filters.filterGenderData
                 }
             }),
 
-            // Domain 0 — College:
-            // DB: candidate's filterCollegeData = my profile.college (they want someone from my college)
             ...(currentDomain === 0 && {
                 filterByCollege: true,
                 filterCollegeData: initiatorProfile.college
             }),
 
-            // Domain 1 — Year:
-            // DB: candidate's filterYearData = my profile.year (they want my year)
             ...(currentDomain === 1 && {
                 filterByYear: true,
                 filterYearData: initiatorProfile.year
             }),
 
-            // Domain 2 — Field of Study:
-            // DB: candidate's filterFieldOfStudyData = my profile.fieldOfStudy (they want my field)
             ...(currentDomain === 2 && {
                 filterByFieldOfStudy: true,
                 filterFieldOfStudyData: initiatorProfile.fieldOfStudy
             })
         },
-        include: { profile: true },  // needed for in-memory check below
+        include: { profile: true },
         orderBy: { createdAt: "asc" }
     })
 
     if (!match) return null
-    console.log("DB match found:", JSON.stringify({
-        profileId: match.profileId,
-        filterByFieldOfStudy: match.filterByFieldOfStudy,
-        filterFieldOfStudyData: match.filterFieldOfStudyData,
-        profileFieldOfStudy: match.profile.fieldOfStudy
-    }))
 
-    // In-memory two-way verification
     const domainMatch =
         currentDomain === 0 ? match.profile.college === filters.filterCollegeData :
             currentDomain === 1 ? match.profile.year === yearFilter :
                 currentDomain === 2 ? match.profile.fieldOfStudy === filters.filterFieldOfStudyData :
                     true
-
-    console.log("domainMatch:", domainMatch, "| currentDomain:", currentDomain,
-        "| match.profile.fieldOfStudy:", match.profile.fieldOfStudy,
-        "| filters.filterFieldOfStudyData:", filters.filterFieldOfStudyData)
 
     if (!domainMatch) return null
 
@@ -756,7 +518,7 @@ export const filterMatch = async (
     })
 
     if (existingSession) {
-        console.log("✅ Reusing existing session:", existingSession.roomId)
+        console.log("Reusing existing session:", existingSession.roomId)
         await prisma.waitingUser.deleteMany({
             where: { profileId: { in: [profileId, match.profileId] } }
         })

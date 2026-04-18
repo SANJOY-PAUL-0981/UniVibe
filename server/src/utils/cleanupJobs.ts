@@ -2,7 +2,7 @@ import { prisma } from "../lib/prisma.js"
 
 const startCleanupJobs = () => {
 
-    console.log("🧹 Cleanup jobs started", new Date().toISOString())
+    console.log("Cleanup jobs started", new Date().toISOString())
 
     setInterval(async () => {
         const cutoff = new Date(Date.now() - 30 * 60 * 1000)
@@ -14,7 +14,7 @@ const startCleanupJobs = () => {
         })
 
         if (deleted.count > 0) {
-            console.log(`🧹 Removed ${deleted.count} WaitingUsers`)
+            console.log(`Removed ${deleted.count} WaitingUsers`)
         }
     }, 5 * 60 * 1000)
 
@@ -29,7 +29,7 @@ const startCleanupJobs = () => {
         })
 
         if (deleted.count > 0) {
-            console.log(`🧹 Removed ${deleted.count} CallSessions`)
+            console.log(`Removed ${deleted.count} CallSessions`)
         }
     }, 10 * 60 * 1000)
 }

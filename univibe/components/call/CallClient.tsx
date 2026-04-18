@@ -79,7 +79,6 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
     }, [])
 
     useEffect(() => {
-        console.log("remoteStream changed:", remoteStream)
         if (remoteStream && skipInProgressRef.current === false) {
             setMode("connected")
             if (noMatchTimeoutRef.current) clearTimeout(noMatchTimeoutRef.current)
@@ -97,7 +96,6 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
         socket.off("peer_skipping")
 
         socket.on("skipped", () => {
-            console.log("Skipped! Waiting for next match...")
             skipInProgressRef.current = true
             setRemoteStream(null)
             setMode("waiting")
@@ -113,7 +111,6 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
         })
 
         socket.on("peer_disconnected", () => {
-            console.log("Peer disconnected! Waiting for next match...")
             skipInProgressRef.current = true
             setRemoteStream(null)
             setMode("waiting")
@@ -129,7 +126,6 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
         })
 
         socket.on("match_found", ({ roomId: newRoomId, isInitiator: newIsInitiator }: { roomId: string, isInitiator: boolean }) => {
-            console.log("New match found! RoomId:", newRoomId, "IsInitiator:", newIsInitiator)
             skipInProgressRef.current = false
             setActionLocked(false)
             setCurrentRoomId(newRoomId)
@@ -141,7 +137,6 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
         })
 
         socket.on("peer_skipping", () => {
-            console.log("Peer is skipping...")
 
             skipInProgressRef.current = true
             setRemoteStream(null)
@@ -180,12 +175,6 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
         }, 1000)
     }
 
-    /*const handleSkip = () => {
-        if (actionLocked || !canSkip) return
-
-        setActionLocked(true)
-        socket.emit("skip", { roomId: currentRoomId })
-    }*/
     const handleSkip = () => {
         if (actionLocked || !canSkip) return
 
