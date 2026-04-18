@@ -1,4 +1,3 @@
-import { time } from "console"
 import { prisma } from "../lib/prisma.js"
 
 const startCleanupJobs = () => {

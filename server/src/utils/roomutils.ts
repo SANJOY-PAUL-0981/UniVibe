@@ -367,7 +367,7 @@ export const onSkip = async (roomId: string, p1SocketId: string, p2SocketId: str
         return null
     }
 
-    await new Promise(resolve => setTimeout(resolve, 2500))
+    //await new Promise(resolve => setTimeout(resolve, 2500))
 
     await requeueBoth(
         session.profile1Id,
@@ -684,44 +684,67 @@ export const filterMatch = async (
         filters.filterYearData !== undefined && filters.filterYearData !== null
             ? Number(filters.filterYearData)
             : null
+    console.log("filterMatch called — domain:", currentDomain, "filters:", JSON.stringify(filters))
+    console.log("initiatorProfile.year:", initiatorProfile.year)
 
-    // Find a candidate who:
-    // 1. Wants the initiator's gender (if gender filter active) AND is the gender the initiator wants
-    // 2. Is filtering on the same domain value the initiator is filtering on
     const match = await prisma.waitingUser.findFirst({
         where: {
             NOT: { profileId },
 
-            // Gender: candidate must want MY gender (initiatorProfile.gender)
-            // AND candidate must BE the gender I want (filters.filterGenderData)
+            // Gender: candidate must want MY gender AND be the gender I want
             ...(filters.filterByGender && {
                 filterByGender: true,
-                filterGenderData: initiatorProfile.gender,  // candidate is searching for my gender
+                filterGenderData: initiatorProfile.gender,  // they want my gender
                 profile: {
-                    gender: filters.filterGenderData         // candidate's actual gender = what I want
+                    gender: filters.filterGenderData         // they ARE my desired gender
                 }
             }),
 
-            // Domain: candidate must be filtering on the same value I'm filtering on
+            // Domain 0 — College:
+            // DB: candidate's filterCollegeData = my profile.college (they want someone from my college)
             ...(currentDomain === 0 && {
                 filterByCollege: true,
-                filterCollegeData: filters.filterCollegeData  // candidate typed same college as me
+                filterCollegeData: initiatorProfile.college
             }),
 
+            // Domain 1 — Year:
+            // DB: candidate's filterYearData = my profile.year (they want my year)
             ...(currentDomain === 1 && {
                 filterByYear: true,
-                filterYearData: yearFilter                    // candidate filtering same year as me
+                filterYearData: initiatorProfile.year
             }),
 
+            // Domain 2 — Field of Study:
+            // DB: candidate's filterFieldOfStudyData = my profile.fieldOfStudy (they want my field)
             ...(currentDomain === 2 && {
                 filterByFieldOfStudy: true,
-                filterFieldOfStudyData: filters.filterFieldOfStudyData  // candidate filtering same field as me
+                filterFieldOfStudyData: initiatorProfile.fieldOfStudy
             })
         },
+        include: { profile: true },  // needed for in-memory check below
         orderBy: { createdAt: "asc" }
     })
 
     if (!match) return null
+    console.log("DB match found:", JSON.stringify({
+        profileId: match.profileId,
+        filterByFieldOfStudy: match.filterByFieldOfStudy,
+        filterFieldOfStudyData: match.filterFieldOfStudyData,
+        profileFieldOfStudy: match.profile.fieldOfStudy
+    }))
+
+    // In-memory two-way verification
+    const domainMatch =
+        currentDomain === 0 ? match.profile.college === filters.filterCollegeData :
+            currentDomain === 1 ? match.profile.year === yearFilter :
+                currentDomain === 2 ? match.profile.fieldOfStudy === filters.filterFieldOfStudyData :
+                    true
+
+    console.log("domainMatch:", domainMatch, "| currentDomain:", currentDomain,
+        "| match.profile.fieldOfStudy:", match.profile.fieldOfStudy,
+        "| filters.filterFieldOfStudyData:", filters.filterFieldOfStudyData)
+
+    if (!domainMatch) return null
 
     const existingSession = await prisma.callSession.findFirst({
         where: {

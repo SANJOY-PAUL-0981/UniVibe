@@ -3,7 +3,6 @@ import {
     makeActive,
     randomMatch,
     filterMatch,
-    endSession,
     onSkip,
     onDisconnected,
     updateWaitingUser
@@ -154,17 +153,20 @@ const roomHandler = (io: Server) => {
                                 filterByCollege: false,
                                 filterCollegeData: null,
                                 filterByYear: true,
-                                filterYearData: profile.year
+                                filterYearData: filters.filterYearData ?? profile.year  // ← user value if exists, else profile
                             }),
                             ...(domain === 2 && {
+                                filterByCollege: false,
+                                filterCollegeData: null,
                                 filterByYear: false,
                                 filterYearData: null,
                                 filterByFieldOfStudy: true,
-                                filterFieldOfStudyData: profile.fieldOfStudy
+                                filterFieldOfStudyData: filters.filterFieldOfStudyData || profile.fieldOfStudy  // ← same
                             })
                         }
 
                         if (domain < 3) {
+                            console.log("tryFilterMatch — domain:", domain, "| currentFilters:", JSON.stringify(currentFilters))
                             const matchWithFilter = await filterMatch(profileId, domain, profileCooldown, currentFilters)
 
                             if (matchWithFilter) {
@@ -190,7 +192,7 @@ const roomHandler = (io: Server) => {
                                 return
                             }
 
-                            const waitTime = domain === currentDomain ? 50000 : 10000
+                            const waitTime = domain === currentDomain ? 20000 : 10000
                             socket.emit('waiting', { message: 'Looking for someone with matching interests...' })
 
                             const timeOut = setTimeout(async () => {
@@ -204,6 +206,18 @@ const roomHandler = (io: Server) => {
 
                                     // fallback at random
                                     if (domain === 3) {
+                                        await updateWaitingUser(profileId, {
+                                            filterByCollege: false,
+                                            filterCollegeData: null,
+                                            filterByYear: false,
+                                            filterYearData: null,
+                                            filterByFieldOfStudy: false,
+                                            filterFieldOfStudyData: null,
+                                            filterByGender: false,
+                                            filterGenderData: null,
+                                            currentDomain: 3
+                                        })
+
                                         const randomMatchResult = await randomMatch(profileId, profileCooldown)
 
                                         if (randomMatchResult) {
@@ -243,11 +257,23 @@ const roomHandler = (io: Server) => {
                                         return
                                     }
 
-                                    /*await updateWaitingUser(profileId, {
-                                        ...(domain === 1 && { filterByCollege: false, filterCollegeData: null, filterByYear: true, filterYearData: profile.year, currentDomain: 1 }),
-                                        ...(domain === 2 && { filterByYear: false, filterYearData: null, filterByFieldOfStudy: true, filterFieldOfStudyData: profile.fieldOfStudy, currentDomain: 2 }),
-                                    })*/
-                                    let updatedData: any = {}
+                                    await updateWaitingUser(profileId, {
+                                        ...(domain === 1 && {
+                                            filterByCollege: false,
+                                            filterCollegeData: null,
+                                            filterByYear: true,
+                                            filterYearData: filters.filterYearData ?? profile.year,
+                                            currentDomain: 1
+                                        }),
+                                        ...(domain === 2 && {
+                                            filterByYear: false,
+                                            filterYearData: null,
+                                            filterByFieldOfStudy: true,
+                                            filterFieldOfStudyData: filters.filterFieldOfStudyData || profile.fieldOfStudy,
+                                            currentDomain: 2
+                                        })
+                                    })
+                                    /*let updatedData: any = {}
 
                                     if (domain === 1) {
                                         updatedData = {
@@ -269,7 +295,7 @@ const roomHandler = (io: Server) => {
                                         }
                                     }
 
-                                    await updateWaitingUser(profileId, updatedData)
+                                    await updateWaitingUser(profileId, updatedData)*/
 
                                     await tryFilterMatch()
                                 } catch (err) {
@@ -285,29 +311,6 @@ const roomHandler = (io: Server) => {
                 console.error(err)
             }
         })
-
-        /*socket.on('skip', async ({ roomId }) => {
-            try {
-                const sockets = await io.in(roomId).fetchSockets()
-                const socket1Id = sockets[0]?.id
-                const socket2Id = sockets[1]?.id
-
-                if (!socket1Id || !socket2Id) {
-                    return null
-                }
-
-                const result = await onSkip(roomId, socket1Id, socket2Id)
-                if (!result) return
-
-                io.to(roomId).emit('skipped')
-                io.socketsLeave(roomId)
-                socketRoomMap.delete(socket1Id)
-                socketRoomMap.delete(socket2Id)
-            } catch (err) {
-                console.error(err);
-
-            }
-        })*/
 
         socket.on('skip', async ({ roomId }) => {
             try {
