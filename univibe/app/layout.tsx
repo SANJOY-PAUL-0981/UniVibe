@@ -33,7 +33,7 @@ export default function RootLayout({
         className={`${fontMono.variable} antialiased`}
       >
         <Toaster
-        position="top-right" />
+          position="top-right" />
         <NextThemesProvider
           attribute="class"
           defaultTheme="light"

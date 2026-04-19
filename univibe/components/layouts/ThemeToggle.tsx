@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useTaptic } from "taptickit/react"
 import {
   TooltipProvider,
   Tooltip,
@@ -13,6 +14,7 @@ import {
 export default function ThemeToggle() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const haptic = useTaptic();
 
   useEffect(() => {
     setMounted(true);
@@ -26,6 +28,7 @@ export default function ThemeToggle() {
   }
 
   const toggleTheme = (event: any) => {
+    haptic.trigger("heavy")
     // setTheme(isDark ? "light" : "dark");
 
     // new with view-transition implementation
