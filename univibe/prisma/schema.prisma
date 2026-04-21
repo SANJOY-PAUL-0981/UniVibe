@@ -102,6 +102,10 @@ model Profile {
   callSessionAsUser1 CallSession[] @relation("CallUser1")
   callSessionAsUser2 CallSession[] @relation("CallUser2")
 
+  reportCount Int       @default(0)
+  isBanned    Boolean   @default(false)
+  bannedAt    DateTime?
+
   @@map("profiles")
 }
 
