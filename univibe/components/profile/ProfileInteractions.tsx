@@ -1,21 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, X } from "lucide-react";
 import { toast } from "sonner";
+import {
+  selectProfileStoreHobbies,
+  useProfileStore,
+} from "@/store/useProfileStore";
 
 const MAX_HOBBIES = 10;
 
 type Props = { initialHobbies: string[] };
 
 export function ProfileInteractions({ initialHobbies }: Props) {
-  const [hobbies, setHobbies] = useState(initialHobbies);
+  const storeHobbies = useProfileStore(selectProfileStoreHobbies);
+  const updateProfilePartial = useProfileStore((state) => state.updateProfilePartial);
+
+  const [hobbies, setHobbies] = useState(
+    storeHobbies.length > 0 ? storeHobbies : initialHobbies,
+  );
   const [editing, setEditing] = useState(false);
   const [newHobby, setNewHobby] = useState("");
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (saving) {
+      return;
+    }
+
+    setHobbies(storeHobbies.length > 0 ? storeHobbies : initialHobbies);
+  }, [storeHobbies, initialHobbies, saving]);
 
   const updateHobbies = async (updated: string[]) => {
     setSaving(true);
@@ -31,6 +48,10 @@ export function ProfileInteractions({ initialHobbies }: Props) {
       if (!res.ok || data.success === false) {
         throw new Error(data.message ?? "Failed to update hobbies");
       }
+
+      const normalizedHobbies = Array.isArray(data.hobbies) ? data.hobbies : updated;
+      setHobbies(normalizedHobbies);
+      updateProfilePartial({ hobbies: normalizedHobbies });
     } catch (error) {
       throw error;
     } finally {

@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useAnimateOnScroll } from "@/hooks/useAnimateOnScroll";
 import { usePathname } from "next/navigation";
+import { useProfileStore, selectProfileStoreUser } from "@/store/useProfileStore";
 
 const navItems = [
   { label: "Home", href: "/home" },
@@ -17,9 +18,14 @@ type Props = {
   imageUrl?: string | null;
 };
 
-const AppNav = ({ username, name, imageUrl }: Props) => {
+const AppNav = () => {
   const { ref, isVisible } = useAnimateOnScroll();
   const pathname = usePathname();
+  const user = useProfileStore(selectProfileStoreUser);
+
+  const username = user?.profile.username || "";
+  const name = user?.name || "";
+  const imageUrl = user?.profile.profilePicture || null;
 
   const initials = username
     .split(/[\s_-]+/)

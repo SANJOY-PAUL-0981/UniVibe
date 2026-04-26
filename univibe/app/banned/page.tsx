@@ -23,7 +23,7 @@ const BannedPage = () => {
                         You speedran getting banned. New record? 🏆
                     </p>
                     <p>
-                        We’ve seen bots behave better than you.
+                        We've seen bots behave better than you.
                     </p>
                     <p>
                         Take 48 hours off.
