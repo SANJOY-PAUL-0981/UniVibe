@@ -4,6 +4,7 @@ import { Server } from "socket.io";
 import { createServer } from "http";
 import signalHandler from "./socket/signalHandler.js";
 import roomHandler from "./socket/roomHandler.js";
+import chatHandler from "./socket/chatHandler.js";
 import startCleanupJobs from "./utils/cleanupJobs.js";
 
 const app = new Hono()
@@ -20,6 +21,7 @@ const io = new Server(httpServer, {
 
 roomHandler(io)
 signalHandler(io)
+chatHandler(io)
 
 startCleanupJobs()
 
