@@ -5,7 +5,7 @@ import type { Socket } from "socket.io-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useChatStore, type ChatMessage } from "@/store/useChatStore"
-import { X } from "lucide-react"
+import { X, SendHorizontal } from "lucide-react"
 
 type Props = {
 	socket: Socket
@@ -65,9 +65,9 @@ export default function CallChat({ socket, roomId, profileId, onClose }: Props) 
 	}
 
 	return (
-		<div className="flex h-full w-full flex-col bg-background">
+		<div className="flex h-full w-full flex-col bg-background rounded-tl-2xl">
 			<div className="flex items-center justify-between border-b border-border/50 p-4">
-				<div>
+				<div className="p-1">
 					<p className="text-sm font-medium">Chat</p>
 					<p className="text-xs text-muted-foreground">Room {roomId}</p>
 				</div>
@@ -117,7 +117,9 @@ export default function CallChat({ socket, roomId, profileId, onClose }: Props) 
 					}}
 					placeholder="Type a message..."
 				/>
-				<Button onClick={handleSendMessage}>Send</Button>
+				<Button onClick={handleSendMessage}>
+					<SendHorizontal />
+				</Button>
 			</div>
 		</div>
 	)

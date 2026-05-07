@@ -21,7 +21,7 @@ export default function VideoTitle({ stream, label, muted = false }: Props) {
     }, [stream])
 
     return (
-        <div className="relative h-full w-full bg-secondary">
+        <div className="relative h-full w-full bg-secondary rounded-2xl">
             {stream ? (
                 <video
                     ref={videoRef}
@@ -35,7 +35,7 @@ export default function VideoTitle({ stream, label, muted = false }: Props) {
                     <p className="text-xs text-muted-foreground">No video</p>
                 </div>
             )}
-            <span className="absolute top-3 left-3 text-xs text-muted-foreground font-medium">
+            <span className="absolute top-3 left-6 text-xs text-muted-foreground font-medium">
                 {label}
             </span>
         </div>
