@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Mic, MicOff, Video, VideoOff } from "lucide-react"
+import { MessageCircle, Mic, MicOff, Video, VideoOff } from "lucide-react"
 import { useCallStore } from "@/store/useCallStore"
 
 type Mode = "waiting" | "connected"
@@ -11,12 +11,14 @@ type Props = {
     mode: Mode
     onSkip: () => void
     onDisconnect: () => void
+    onOpenChat: () => void
     canSkip: boolean
     cooldown: number
     actionLocked: boolean
+    isChatOpen: boolean
 }
 
-export default function CallControls({ mode, onSkip, onDisconnect, canSkip, cooldown, actionLocked }: Props) {
+export default function CallControls({ mode, onSkip, onDisconnect, onOpenChat, canSkip, cooldown, actionLocked, isChatOpen }: Props) {
     const { localStream } = useCallStore()
     const [micOn, setMicOn] = useState(true)
     const [camOn, setCamOn] = useState(true)
@@ -36,41 +38,58 @@ export default function CallControls({ mode, onSkip, onDisconnect, canSkip, cool
     }
 
     return (
-        <div className="flex items-center justify-center gap-3 p-4 border-t border-border/50">
+        <div className="flex items-center gap-3 border-t border-border/50 px-4 py-3">
+            <div className="flex items-center gap-2">
+                <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={toggleMic}
+                >
+                    {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+                </Button>
 
-            <Button
-                variant="outline"
-                size="icon"
-                onClick={toggleMic}
-            >
-                {micOn ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
-            </Button>
+                <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={toggleCam}
+                >
+                    {camOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+                </Button>
+            </div>
 
-            <Button
-                variant="outline"
-                size="icon"
-                onClick={toggleCam}
-            >
-                {camOn ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
-            </Button>
+            <div className="flex flex-1 items-center justify-center gap-2">
+                {mode === "connected" && (
+                    <>
+                        <Button
+                            variant="secondary"
+                            onClick={onSkip}
+                            disabled={!canSkip || actionLocked}
+                        >
+                            {!canSkip ? `Skip (${cooldown})` : "Skip"}
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={onDisconnect}
+                            disabled={!canSkip || actionLocked}
+                        >
+                            {!canSkip ? `Exit (${cooldown})` : "Exit"}
+                        </Button>
+                    </>
+                )}
+            </div>
 
-            {mode === "connected" && (
-                <>
+            {!isChatOpen && (
+                <div className="ml-auto flex items-center">
                     <Button
-                        variant="secondary"
-                        onClick={onSkip}
-                        disabled={!canSkip || actionLocked}>
-                        {!canSkip ? `Skip (${cooldown})` : "Skip"}
+                        variant="outline"
+                        size="icon"
+                        onClick={onOpenChat}
+                        aria-label="Open chat"
+                    >
+                        <MessageCircle className="h-4 w-4" />
                     </Button>
-                    <Button
-                        variant="destructive"
-                        onClick={onDisconnect}
-                        disabled={!canSkip || actionLocked}>
-                        {!canSkip ? `Exit (${cooldown})` : "Exit"}
-                    </Button>
-                </>
+                </div>
             )}
-
         </div>
     )
 }

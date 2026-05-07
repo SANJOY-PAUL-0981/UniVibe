@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useSocket } from "@/hooks/useSocket"
 import { useWebRTC } from "@/hooks/useWebRTC"
 import { useCallStore } from "@/store/useCallStore"
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
+import CallChat from "@/components/call/CallChat"
 import VideoTile from "@/components/call/VideoTitle"
 import CallControls from "@/components/call/CallControls"
 import WaitingScreen from "@/components/call/WaitingScreen"
@@ -36,6 +36,7 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
     const [canSkip, setCanSkip] = useState(false)
     const [cooldown, setCooldown] = useState(5)
     const [actionLocked, setActionLocked] = useState(false)
+    const [isChatOpen, setIsChatOpen] = useState(false)
 
 
     useWebRTC(socket, currentRoomId, currentIsInitiator)
@@ -60,15 +61,19 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
         }
     }, [mode])
 
-    useEffect(() => {
-        const fromConnecting = sessionStorage.getItem("fromConnecting")
-        if (!fromConnecting) {
-            router.push("/home")
-            return
-        }
-        sessionStorage.removeItem("fromConnecting")
-        setChecking(false)
-    }, [])
+    // useEffect(() => {
+    //     const fromConnecting = sessionStorage.getItem("fromConnecting")
+    //     if (!fromConnecting) {
+    //         router.push("/home")
+    //         return
+    //     }
+    //     sessionStorage.removeItem("fromConnecting")
+    //     setChecking(false)
+    // }, [])
+    useEffect(() => { //Temporary code snippet
+    setChecking(false)
+    setMode("connected")
+}, [])
 
     useEffect(() => {
         const handleBeforeUnload = () => {
@@ -215,62 +220,61 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
     }
 
     return (
-        <div className="h-screen w-full flex flex-col">
-            <ResizablePanelGroup orientation="horizontal" className="flex-1">
+        <div className="relative h-screen w-full overflow-hidden bg-background text-foreground">
+            <div className="absolute inset-0 bg-linear-to-b from-muted/30 to-transparent dark:from-muted/10" />
 
-                <ResizablePanel defaultSize={40} minSize={20}>
-                    <div className="flex flex-col h-full">
+            <div className="relative flex h-full w-full">
+                {/* Left side: Video and Controls */}
+                <div className="relative flex flex-1 flex-col overflow-hidden">
+                    <div className="relative flex-1 overflow-hidden">
+                        <div className="absolute inset-0">
+                            <VideoTile
+                                stream={remoteStream}
+                                label="Stranger"
+                                muted={false}
+                            />
+                        </div>
 
-                        <ResizablePanelGroup orientation="vertical" className="flex-1">
+                        <div className="absolute right-4 bottom-24 z-20 h-36 w-52 overflow-hidden rounded-2xl border border-border bg-secondary/80 shadow-2xl backdrop-blur-md sm:h-40 sm:w-60">
+                            <VideoTile
+                                key={remoteStream?.id ?? "remote"}
+                                stream={localStream}
+                                label="You"
+                                muted={true}
+                            />
+                        </div>
 
-                            <ResizablePanel defaultSize={60} minSize={30}>
-                                <VideoTile
-                                    stream={remoteStream}
-                                    label="Stranger"
-                                    muted={false}
-                                />
-                            </ResizablePanel>
+                        {/* <div className="absolute left-4 top-4 z-20 rounded-full border border-border bg-muted/60 px-4 py-2 text-sm text-foreground shadow-lg backdrop-blur-md">
+                            {currentIsInitiator ? "You started this room" : "In a call"}
+                        </div> */}
+                    </div>
 
-                            <ResizableHandle withHandle />
-
-                            <ResizablePanel defaultSize={40} minSize={20}>
-                                <VideoTile
-                                    key={remoteStream?.id ?? "remote"}
-                                    stream={localStream}
-                                    label="You"
-                                    muted={true}
-                                />
-                            </ResizablePanel>
-
-                        </ResizablePanelGroup>
-
+                    <div className="relative z-20 border-t border-border bg-secondary/40 backdrop-blur-xl">
                         <CallControls
                             mode={mode}
                             onSkip={handleSkip}
                             onDisconnect={handleDisconnect}
+                            onOpenChat={() => setIsChatOpen(true)}
                             canSkip={canSkip}
                             cooldown={cooldown}
                             actionLocked={actionLocked}
+                            isChatOpen={isChatOpen}
                         />
-
                     </div>
-                </ResizablePanel>
+                </div>
 
-                <ResizableHandle withHandle />
-
-                <ResizablePanel defaultSize={60} minSize={30}>
-                    <div className="h-full w-full flex flex-col border-l border-border/50">
-                        <div className="p-4 border-b border-border/50">
-                            <p className="text-sm font-medium">Chat</p>
-                        </div>
-                        <div className="flex-1" />
-                        <div className="p-4 border-t border-border/50">
-                            <p className="text-xs text-zinc-500 text-center">Chat coming soon...</p>
-                        </div>
+                {/* Right side: Chat Panel (full height) */}
+                {isChatOpen && (
+                    <div className="h-full w-[380px] border-l border-border bg-background shadow-2xl">
+                        <CallChat
+                            socket={socket}
+                            roomId={currentRoomId}
+                            profileId={profileId}
+                            onClose={() => setIsChatOpen(false)}
+                        />
                     </div>
-                </ResizablePanel>
-
-            </ResizablePanelGroup>
+                )}
+            </div>
         </div>
     )
 }
