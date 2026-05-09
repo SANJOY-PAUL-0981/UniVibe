@@ -16,6 +16,8 @@ type CallStatus = "idle" | "waiting" | "connected" | "ended";
 type CallStore = {
   localStream: MediaStream | null;
   remoteStream: MediaStream | null;
+  remoteCamOn: boolean;
+  remoteAudioOn: boolean;
   remoteProfile: {
     id?: string;
     username?: string;
@@ -28,6 +30,8 @@ type CallStore = {
 
   setLocalStream: (stream: MediaStream | null) => void;
   setRemoteStream: (stream: MediaStream | null) => void;
+  setRemoteCamOn: (value: boolean) => void;
+  setRemoteAudioOn: (value: boolean) => void;
   setRemoteProfile: (
     p: {
       id?: string;
@@ -55,6 +59,8 @@ const defaultFilters: Filters = {
 export const useCallStore = create<CallStore>((set) => ({
   localStream: null,
   remoteStream: null,
+  remoteCamOn: false,
+  remoteAudioOn: false,
   remoteProfile: null,
   roomId: null,
   callStatus: "idle",
@@ -63,6 +69,8 @@ export const useCallStore = create<CallStore>((set) => ({
 
   setLocalStream: (stream) => set({ localStream: stream }),
   setRemoteStream: (stream) => set({ remoteStream: stream }),
+  setRemoteCamOn: (value) => set({ remoteCamOn: value }),
+  setRemoteAudioOn: (value) => set({ remoteAudioOn: value }),
   setRemoteProfile: (p) => set({ remoteProfile: p }),
   setRoomId: (id) => set({ roomId: id }),
   setCallStatus: (status) => set({ callStatus: status }),
@@ -73,6 +81,8 @@ export const useCallStore = create<CallStore>((set) => ({
     set({
       localStream: null,
       remoteStream: null,
+      remoteCamOn: false,
+      remoteAudioOn: false,
       remoteProfile: null,
       roomId: null,
       callStatus: "idle",

@@ -50,6 +50,9 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
   const [cooldown, setCooldown] = useState(5);
   const [actionLocked, setActionLocked] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [camOn, setCamOn] = useState(true);
+  const remoteCamOn = useCallStore((state) => state.remoteCamOn);
+  const remoteAudioOn = useCallStore((state) => state.remoteAudioOn);
   const {
     addMessage,
     clearMessages,
@@ -70,7 +73,7 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
         .slice(0, 2)
     : "";
 
-  useWebRTC(socket, currentRoomId, currentIsInitiator);
+  const { replaceTrack } = useWebRTC(socket, currentRoomId, currentIsInitiator);
 
   useEffect(() => {
     if (mode === "connected") {
@@ -151,7 +154,27 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
     return () => {
       socket.off("newMessage", handleNewMessage);
     };
-  }, [socket, currentRoomId, profileId, isChatOpen, addMessage, incrementUnread]);
+  }, [
+    socket,
+    currentRoomId,
+    profileId,
+    isChatOpen,
+    addMessage,
+    incrementUnread,
+  ]);
+
+  useEffect(() => {
+    const handleMediaState = ({ camOn, micOn }: { camOn?: boolean; micOn?: boolean }) => {
+      if (typeof camOn === "boolean") useCallStore.getState().setRemoteCamOn(camOn);
+      if (typeof micOn === "boolean") useCallStore.getState().setRemoteAudioOn(micOn);
+    };
+
+    socket.on("media_state", handleMediaState);
+
+    return () => {
+      socket.off("media_state", handleMediaState);
+    };
+  }, [socket]);
 
   useEffect(() => {
     if (remoteStream && skipInProgressRef.current === false) {
@@ -337,6 +360,8 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
                         .slice(0, 2)
                     : profileInitials
                 }
+                camOn={remoteCamOn}
+                audioOn={remoteAudioOn}
               />
             </div>
 
@@ -346,6 +371,7 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
                 stream={localStream}
                 label="You"
                 muted={true}
+                camOn={camOn}
               />
             </div>
           </div>
@@ -361,6 +387,16 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
               actionLocked={actionLocked}
               isChatOpen={isChatOpen}
               unreadCount={unreadCount}
+              replaceTrack={replaceTrack}
+              onMediaStateChange={(state: { camOn: boolean; micOn: boolean }) => {
+                socket.emit("media_state", {
+                  roomId: currentRoomId,
+                  camOn: state.camOn,
+                  micOn: state.micOn,
+                });
+              }}
+              camOn={camOn}
+              setCamOn={setCamOn}
             />
           </div>
         </div>

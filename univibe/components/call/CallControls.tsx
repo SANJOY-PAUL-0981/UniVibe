@@ -25,6 +25,13 @@ type Props = {
   actionLocked: boolean;
   isChatOpen: boolean;
   unreadCount: number;
+  replaceTrack: (
+    kind: "audio" | "video",
+    newTrack: MediaStreamTrack | null,
+  ) => Promise<void> | void;
+  onMediaStateChange: (state: { camOn: boolean; micOn: boolean }) => void;
+  camOn: boolean;
+  setCamOn: (val: boolean) => void;
 };
 
 export default function CallControls({
@@ -37,23 +44,78 @@ export default function CallControls({
   actionLocked,
   isChatOpen,
   unreadCount,
+  replaceTrack,
+  onMediaStateChange,
+  camOn,
+  setCamOn,
 }: Props) {
-  const { localStream } = useCallStore();
+  const { localStream, setLocalStream } = useCallStore();
   const [micOn, setMicOn] = useState(true);
-  const [camOn, setCamOn] = useState(true);
 
-  const toggleMic = () => {
+  const toggleMic = async () => {
+    const nextMic = !micOn;
     localStream?.getAudioTracks().forEach((track) => {
-      track.enabled = !micOn;
+      track.enabled = nextMic;
     });
-    setMicOn((prev) => !prev);
+    setMicOn(nextMic);
+    try {
+      onMediaStateChange({ camOn, micOn: nextMic });
+    } catch {
+      // ignore
+    }
   };
 
-  const toggleCam = () => {
+  const toggleCam = async () => {
+    const videoTracks = localStream?.getVideoTracks() ?? [];
+    const audioTracks = localStream?.getAudioTracks() ?? [];
+
     localStream?.getVideoTracks().forEach((track) => {
-      track.enabled = !camOn;
+      track.stop();
     });
-    setCamOn((prev) => !prev);
+
+    await replaceTrack("video", null);
+
+    if (camOn) {
+      setLocalStream(new MediaStream(audioTracks));
+      setCamOn(false);
+      try {
+        onMediaStateChange({ camOn: false, micOn });
+      } catch {}
+      return;
+    }
+
+    try {
+      const acquired = await navigator.mediaDevices.getUserMedia({
+        video: true,
+      });
+      const newTrack = acquired.getVideoTracks()[0];
+      const newStream = new MediaStream([...audioTracks, newTrack]);
+      setLocalStream(newStream);
+      await replaceTrack("video", newTrack);
+      setCamOn(true);
+      try {
+        onMediaStateChange({ camOn: true, micOn });
+      } catch {}
+    } catch (err) {
+      console.error("Camera re-acquire failed:", err);
+      // Restore the previous preview if reacquire fails.
+      const restoredVideoTrack = videoTracks[0] ?? null;
+      if (restoredVideoTrack) {
+        restoredVideoTrack.enabled = true;
+        setLocalStream(new MediaStream([...audioTracks, restoredVideoTrack]));
+        await replaceTrack("video", restoredVideoTrack);
+        setCamOn(true);
+        try {
+          onMediaStateChange({ camOn: true, micOn });
+        } catch {}
+      } else {
+        setLocalStream(new MediaStream(audioTracks));
+        setCamOn(false);
+        try {
+          onMediaStateChange({ camOn: false, micOn });
+        } catch {}
+      }
+    }
   };
 
   return (
