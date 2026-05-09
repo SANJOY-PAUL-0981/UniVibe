@@ -24,6 +24,7 @@ type Props = {
   cooldown: number;
   actionLocked: boolean;
   isChatOpen: boolean;
+  unreadCount: number;
 };
 
 export default function CallControls({
@@ -35,6 +36,7 @@ export default function CallControls({
   cooldown,
   actionLocked,
   isChatOpen,
+  unreadCount,
 }: Props) {
   const { localStream } = useCallStore();
   const [micOn, setMicOn] = useState(true);
@@ -87,7 +89,6 @@ export default function CallControls({
               variant="destructive"
               onClick={onDisconnect}
               disabled={!canSkip || actionLocked}
-              //   className="flex items-center gap-1"
             >
               <span>{!canSkip ? `Exit (${cooldown})` : "Exit"}</span>
               <span>
@@ -105,8 +106,14 @@ export default function CallControls({
             size="icon"
             onClick={onOpenChat}
             aria-label="Open chat"
+            className="relative"
           >
             <MessageSquareText className="h-4 w-4" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-2 -right-2 min-w-4 h-4 px-1 rounded-full bg-destructive text-[10px] font-semibold text-destructive-foreground flex items-center justify-center">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
           </Button>
         </div>
       )}

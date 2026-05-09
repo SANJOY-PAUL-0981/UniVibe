@@ -147,15 +147,23 @@ export default function ConnectingClient({ profileId, filters, currentDomain }: 
             setMessage(domainMessages[domain] ?? "Looking for someone...")
         })
 
-        socket.on("match_found", ({ roomId, isInitiator }: { roomId: string, isInitiator: boolean }) => {
-            if (noMatchTimeoutRef.current) clearTimeout(noMatchTimeoutRef.current)
+            socket.on(
+                "match_found",
+                ({ roomId, isInitiator, stranger }: { roomId: string; isInitiator: boolean; stranger?: { id?: string; username?: string; profilePicture?: string | null } | null }) => {
+                    if (noMatchTimeoutRef.current) clearTimeout(noMatchTimeoutRef.current)
 
-            setRoomId(roomId)
-            setCallStatus("connected")
-            sessionStorage.setItem("fromConnecting", "true")
+                    // persist room and stranger for the CallClient
+                    setRoomId(roomId)
+                    // store stranger profile so CallClient can read it after navigation
+                    const setRemoteProfile = useCallStore.getState().setRemoteProfile
+                    setRemoteProfile(stranger ?? null)
 
-            router.replace(`/call/${roomId}?isInitiator=${isInitiator}`)
-        })
+                    setCallStatus("connected")
+                    sessionStorage.setItem("fromConnecting", "true")
+
+                    router.replace(`/call/${roomId}?isInitiator=${isInitiator}`)
+                },
+            )
 
         socket.on("no_match_found", () => {
             setNoMatch(true)

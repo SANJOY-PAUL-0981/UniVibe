@@ -16,7 +16,7 @@ export const useWebRTC = (socket: Socket, roomId: string | null, isInitiator: bo
                 stream = existingStream
             } else {
                 stream = await navigator.mediaDevices.getUserMedia({
-                    video: false,
+                    video: true,
                     audio: true
                 })
                 setLocalStream(stream)

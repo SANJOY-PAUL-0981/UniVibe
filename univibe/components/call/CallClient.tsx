@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import { useSocket } from "@/hooks/useSocket";
 import { useWebRTC } from "@/hooks/useWebRTC";
 import { useCallStore } from "@/store/useCallStore";
+import {
+  useProfileStore,
+  selectProfileStoreProfile,
+} from "@/store/useProfileStore";
+import { useChatStore } from "@/store/useChatStore";
 import CallChat from "@/components/call/CallChat";
 import VideoTile from "@/components/call/VideoTitle";
 import CallControls from "@/components/call/CallControls";
@@ -45,6 +50,25 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
   const [cooldown, setCooldown] = useState(5);
   const [actionLocked, setActionLocked] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const {
+    addMessage,
+    clearMessages,
+    setActiveRoomId,
+    unreadCount,
+    incrementUnread,
+    resetUnread,
+  } = useChatStore();
+  const setRemoteProfile = useCallStore((state) => state.setRemoteProfile);
+  const remoteProfile = useCallStore((state) => state.remoteProfile);
+  const profile = useProfileStore(selectProfileStoreProfile);
+  const profileInitials = profile
+    ? (profile.username || "")
+        .split(/[/\s_-]+/)
+        .map((w) => w[0] || "")
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "";
 
   useWebRTC(socket, currentRoomId, currentIsInitiator);
 
@@ -69,19 +93,32 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
   }, [mode]);
 
   useEffect(() => {
-      const fromConnecting = sessionStorage.getItem("fromConnecting")
-      if (!fromConnecting) {
-          router.push("/home")
-          return
-      }
-      sessionStorage.removeItem("fromConnecting")
-      setChecking(false)
-  }, [])
-//   useEffect(() => {
-//     //Temporary code snippet
-//     setChecking(false);
-//     setMode("connected");
-//   }, []);
+    const fromConnecting = sessionStorage.getItem("fromConnecting");
+    if (!fromConnecting) {
+      router.push("/home");
+      return;
+    }
+    sessionStorage.removeItem("fromConnecting");
+    setChecking(false);
+  }, []);
+
+  useEffect(() => {
+    setActiveRoomId(currentRoomId);
+    clearMessages();
+    resetUnread();
+  }, [currentRoomId, clearMessages, resetUnread, setActiveRoomId]);
+
+  useEffect(() => {
+    if (isChatOpen) {
+      resetUnread();
+    }
+  }, [isChatOpen, resetUnread]);
+
+  // // Temporary code snippet - for testing waiting screen
+  // useEffect(() => {
+  //   setChecking(false);
+  //   setMode("connected");
+  // }, []);
 
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -90,6 +127,31 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, []);
+
+  useEffect(() => {
+    const handleNewMessage = (payload: {
+      id: string;
+      roomId: string;
+      senderId: string;
+      message: string;
+      createdAt: number;
+    }) => {
+      if (payload.roomId !== currentRoomId) return;
+      if (payload.senderId === profileId) return;
+
+      addMessage(payload);
+
+      if (!isChatOpen) {
+        incrementUnread();
+      }
+    };
+
+    socket.on("newMessage", handleNewMessage);
+
+    return () => {
+      socket.off("newMessage", handleNewMessage);
+    };
+  }, [socket, currentRoomId, profileId, isChatOpen, addMessage, incrementUnread]);
 
   useEffect(() => {
     if (remoteStream && skipInProgressRef.current === false) {
@@ -111,6 +173,7 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
     socket.on("skipped", () => {
       skipInProgressRef.current = true;
       setRemoteStream(null);
+      setRemoteProfile(null);
       setMode("waiting");
       setReMatchTimeLeft(60);
 
@@ -126,6 +189,7 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
     socket.on("peer_disconnected", () => {
       skipInProgressRef.current = true;
       setRemoteStream(null);
+      setRemoteProfile(null);
       setMode("waiting");
       setReMatchTimeLeft(60);
 
@@ -143,15 +207,22 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
       ({
         roomId: newRoomId,
         isInitiator: newIsInitiator,
+        stranger,
       }: {
         roomId: string;
         isInitiator: boolean;
+        stranger?: {
+          id?: string;
+          username?: string;
+          profilePicture?: string | null;
+        } | null;
       }) => {
         skipInProgressRef.current = false;
         setActionLocked(false);
         setCurrentRoomId(newRoomId);
         setCurrentIsInitiator(newIsInitiator);
         setRoomId(newRoomId);
+        setRemoteProfile(stranger ?? null);
 
         if (noMatchTimeoutRef.current) clearTimeout(noMatchTimeoutRef.current);
         if (reMatchTimerRef.current) clearInterval(reMatchTimerRef.current);
@@ -161,6 +232,7 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
     socket.on("peer_skipping", () => {
       skipInProgressRef.current = true;
       setRemoteStream(null);
+      setRemoteProfile(null);
       setMode("waiting");
       setReMatchTimeLeft(60);
 
@@ -203,6 +275,7 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
 
     skipInProgressRef.current = true;
     setRemoteStream(null);
+    setRemoteProfile(null);
     setMode("waiting");
     setReMatchTimeLeft(60);
     startReMatchTimer();
@@ -214,6 +287,9 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
     if (noMatchTimeoutRef.current) clearTimeout(noMatchTimeoutRef.current);
     if (reMatchTimerRef.current) clearInterval(reMatchTimerRef.current);
     socket.disconnect();
+    clearMessages();
+    resetUnread();
+    setActiveRoomId(null);
     reset();
     router.push("/home");
   };
@@ -236,28 +312,41 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
   }
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-background text-foreground">
+    <div className="relative h-screen w-full overflow-hidden bg-muted-background text-foreground">
       <div className="absolute inset-0 bg-linear-to-b from-muted/30 to-transparent dark:from-muted/10" />
 
       <div className="relative flex h-full w-full">
         {/* Left side: Video and Controls */}
         <div className="relative flex flex-1 flex-col overflow-hidden">
-          <div className="relative flex-1 overflow-hidden w-[96%] mx-auto">
-            <div className="absolute inset-0 h-[80vh] my-auto">
-              <VideoTile stream={remoteStream} label="Stranger" muted={false} />
+          <div className="relative flex-1 overflow-hidden w-[75%] mx-auto">
+            <div className="absolute inset-0 h-[85vh] my-auto overflow-hidden rounded-2xl border-2 border-border bg-secondary/80 shadow-3xl backdrop-blur-md">
+              <VideoTile
+                stream={remoteStream}
+                label={remoteProfile?.username ?? "Stranger"}
+                muted={false}
+                avatarUrl={
+                  remoteProfile?.profilePicture ?? profile?.profilePicture
+                }
+                avatarInitials={
+                  remoteProfile
+                    ? (remoteProfile.username || "")
+                        .split(/[/\s_-]+/)
+                        .map((w) => w[0] || "")
+                        .join("")
+                        .toUpperCase()
+                        .slice(0, 2)
+                    : profileInitials
+                }
+              />
             </div>
 
-            <div className="absolute right-10 bottom-24 z-20 h-36 w-52 overflow-hidden rounded-2xl border-2 border-border bg-secondary/80 shadow-3xl backdrop-blur-md sm:h-40 sm:w-60">
+            <div className="absolute right-8 bottom-20 z-20 h-30 w-48 overflow-hidden rounded-2xl border-2 border-border bg-secondary/80 shadow-3xl backdrop-blur-md sm:h-40 sm:w-60">
               <VideoTile
                 key={remoteStream?.id ?? "remote"}
                 stream={localStream}
                 label="You"
                 muted={true}
               />
-            </div>
-
-            <div className="absolute left-4 top-2 z-20 rounded-full border border-border bg-muted/60 px-2 py-1 text-xs text-foreground shadow-lg backdrop-blur-md">
-              {currentIsInitiator ? "You started this room" : "In a call"}
             </div>
           </div>
 
@@ -271,6 +360,7 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
               cooldown={cooldown}
               actionLocked={actionLocked}
               isChatOpen={isChatOpen}
+              unreadCount={unreadCount}
             />
           </div>
         </div>
