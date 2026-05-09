@@ -76,8 +76,9 @@ export const useCallStore = create<CallStore>((set) => ({
   setCallStatus: (status) => set({ callStatus: status }),
   setFilters: (filters, currentDomain) => set({ filters, currentDomain }),
   reset: () => {
-    const { localStream } = useCallStore.getState();
+    const { localStream, remoteStream } = useCallStore.getState();
     localStream?.getTracks().forEach((track) => track.stop());
+    remoteStream?.getTracks().forEach((track) => track.stop());
     set({
       localStream: null,
       remoteStream: null,
@@ -89,5 +90,4 @@ export const useCallStore = create<CallStore>((set) => ({
       filters: defaultFilters,
       currentDomain: 3,
     });
-  },
-}));
+  },}));

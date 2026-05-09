@@ -27,9 +27,8 @@ export function ProfileAvatar({ initials, imageUrl }: Props) {
       return;
     }
 
-    setPreview(storeImageUrl ?? imageUrl ?? null);
+    setPreview(storeImageUrl ?? null);
   }, [storeImageUrl, imageUrl, isBusy]);
-
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
