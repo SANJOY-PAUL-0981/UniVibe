@@ -122,14 +122,14 @@ export default function CallControls({
     <div className="flex items-center gap-3 border-t border-border/50 px-4 py-3">
       <div className="flex items-center gap-2">
         <Button variant="outline" size="icon" onClick={toggleMic}>
-          {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+          {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4 text-red-600" />}
         </Button>
 
         <Button variant="outline" size="icon" onClick={toggleCam}>
           {camOn ? (
             <Video className="h-4 w-4" />
           ) : (
-            <VideoOff className="h-4 w-4" />
+            <VideoOff className="h-4 w-4 text-red-600" />
           )}
         </Button>
       </div>

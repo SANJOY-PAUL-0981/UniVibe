@@ -51,6 +51,7 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
   const [actionLocked, setActionLocked] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [camOn, setCamOn] = useState(true);
+  const [localAudioOn, setLocalAudioOn] = useState(true);
   const remoteCamOn = useCallStore((state) => state.remoteCamOn);
   const remoteAudioOn = useCallStore((state) => state.remoteAudioOn);
   const {
@@ -117,7 +118,7 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
     }
   }, [isChatOpen, resetUnread]);
 
-  // // Temporary code snippet - for testing waiting screen
+  // // Temporary code snippet - for testing diff screens
   // useEffect(() => {
   //   setChecking(false);
   //   setMode("connected");
@@ -164,9 +165,17 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
   ]);
 
   useEffect(() => {
-    const handleMediaState = ({ camOn, micOn }: { camOn?: boolean; micOn?: boolean }) => {
-      if (typeof camOn === "boolean") useCallStore.getState().setRemoteCamOn(camOn);
-      if (typeof micOn === "boolean") useCallStore.getState().setRemoteAudioOn(micOn);
+    const handleMediaState = ({
+      camOn,
+      micOn,
+    }: {
+      camOn?: boolean;
+      micOn?: boolean;
+    }) => {
+      if (typeof camOn === "boolean")
+        useCallStore.getState().setRemoteCamOn(camOn);
+      if (typeof micOn === "boolean")
+        useCallStore.getState().setRemoteAudioOn(micOn);
     };
 
     socket.on("media_state", handleMediaState);
@@ -343,13 +352,12 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
         <div className="relative flex flex-1 flex-col overflow-hidden">
           <div className="relative flex-1 overflow-hidden w-[75%] mx-auto">
             <div className="absolute inset-0 h-[85vh] my-auto overflow-hidden rounded-2xl border-2 border-border bg-secondary/80 shadow-3xl backdrop-blur-md">
+              {/* Remote Stream */}
               <VideoTile
                 stream={remoteStream}
                 label={remoteProfile?.username ?? "Stranger"}
                 muted={false}
-                avatarUrl={
-                  remoteProfile?.profilePicture ?? profile?.profilePicture
-                }
+                avatarUrl={remoteProfile?.profilePicture ?? null}
                 avatarInitials={
                   remoteProfile
                     ? (remoteProfile.username || "")
@@ -366,12 +374,17 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
             </div>
 
             <div className="absolute right-8 bottom-20 z-20 h-30 w-48 overflow-hidden rounded-2xl border-2 border-border bg-secondary/80 shadow-3xl backdrop-blur-md sm:h-40 sm:w-60">
+              {/**My Stream */}
               <VideoTile
-                key={remoteStream?.id ?? "remote"}
+                key={localStream?.id ?? "local"}
                 stream={localStream}
-                label="You"
+                label={`${profile?.username ?? "You"} (You)`}
                 muted={true}
+                avatarUrl={profile?.profilePicture ?? null}
+                avatarInitials={profileInitials}
                 camOn={camOn}
+                audioOn={localAudioOn}
+                compact
               />
             </div>
           </div>
@@ -388,7 +401,13 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
               isChatOpen={isChatOpen}
               unreadCount={unreadCount}
               replaceTrack={replaceTrack}
-              onMediaStateChange={(state: { camOn: boolean; micOn: boolean }) => {
+              onMediaStateChange={(state: {
+                camOn: boolean;
+                micOn: boolean;
+              }) => {
+                // reflect local mic state immediately for local preview
+                if (typeof state.micOn === "boolean")
+                  setLocalAudioOn(state.micOn);
                 socket.emit("media_state", {
                   roomId: currentRoomId,
                   camOn: state.camOn,

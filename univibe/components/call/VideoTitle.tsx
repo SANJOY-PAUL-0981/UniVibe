@@ -11,6 +11,7 @@ type Props = {
   avatarInitials?: string;
   camOn?: boolean;
   audioOn?: boolean;
+  compact?: boolean;
 };
 
 export default function VideoTitle({
@@ -21,6 +22,7 @@ export default function VideoTitle({
   avatarInitials,
   camOn = true,
   audioOn = true,
+  compact = false,
 }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -39,12 +41,17 @@ export default function VideoTitle({
     }
   }, [stream, videoActive]);
 
+  const avatarSizeClass = compact ? "h-12 w-12" : "h-24 w-24";
+  const avatarTextClass = compact ? "text-lg" : "text-2xl";
+  const audioIconClass = compact ? "h-3 w-3" : "h-4 w-4";
+  const labelClass = compact ? "absolute left-3 top-2 text-xs" : "absolute left-6 top-3 text-sm";
+
   return (
     <div className="relative h-full w-full bg-secondary rounded-2xl overflow-hidden">
       {/* Audio-off indicator */}
       {!audioOn && (
         <div className="absolute right-3 top-3 z-30 rounded-full bg-destructive/80 p-1">
-          <MicOff className="h-4 w-4 text-destructive-foreground" />
+          <MicOff className={`${audioIconClass} text-destructive-foreground`} />
         </div>
       )}
       {/* Keep the video mounted, but hide it when there is no live camera feed */}
@@ -64,11 +71,11 @@ export default function VideoTitle({
               <img
                 src={avatarUrl}
                 alt={label}
-                className="h-24 w-24 rounded-full object-cover"
+                className={`${avatarSizeClass} rounded-full object-cover`}
               />
             ) : (
-              <div className="h-24 w-24 rounded-full bg-muted-foreground/10 flex items-center justify-center">
-                <span className="text-2xl font-semibold text-foreground">
+              <div className={`${avatarSizeClass} rounded-full bg-muted-foreground/10 flex items-center justify-center`}>
+                <span className={`${avatarTextClass} font-semibold text-foreground`}>
                   {avatarInitials ??
                     label
                       .split(/[/\s_-]+/)
@@ -83,7 +90,7 @@ export default function VideoTitle({
         </div>
       )}
 
-      <span className="absolute left-6 top-3 text-sm font-medium text-foreground drop-shadow-sm">
+      <span className={`${labelClass} font-medium text-foreground drop-shadow-sm`}>
         {label}
       </span>
     </div>
