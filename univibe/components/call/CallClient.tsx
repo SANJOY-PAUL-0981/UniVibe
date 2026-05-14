@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { useSocket } from "@/hooks/useSocket";
 import { useWebRTC } from "@/hooks/useWebRTC";
 import { useCallStore } from "@/store/useCallStore";
@@ -326,6 +327,27 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
     router.push("/home");
   };
 
+  const handleReport = async () => {
+    try {
+      const response = await fetch("/api/report", {
+        method: "POST",
+      });
+      const data = await response.json().catch(() => null);
+
+      if (!data?.success) {
+        throw new Error(data?.message ?? "Failed to report user");
+      }
+
+      toast.success(data.message ?? "User reported successfully");
+      handleDisconnect();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to report user";
+      toast.error(message);
+      throw error;
+    }
+  };
+
   if (checking) return null;
 
   if (noMatch) {
@@ -395,6 +417,7 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
               onSkip={handleSkip}
               onDisconnect={handleDisconnect}
               onOpenChat={() => setIsChatOpen(true)}
+              onReport={handleReport}
               canSkip={canSkip}
               cooldown={cooldown}
               actionLocked={actionLocked}

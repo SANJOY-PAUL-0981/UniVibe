@@ -3,6 +3,17 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Flag,
   MessageSquareText,
   Mic,
   MicOff,
@@ -20,6 +31,7 @@ type Props = {
   onSkip: () => void;
   onDisconnect: () => void;
   onOpenChat: () => void;
+  onReport: () => Promise<void>;
   canSkip: boolean;
   cooldown: number;
   actionLocked: boolean;
@@ -39,6 +51,7 @@ export default function CallControls({
   onSkip,
   onDisconnect,
   onOpenChat,
+  onReport,
   canSkip,
   cooldown,
   actionLocked,
@@ -49,8 +62,10 @@ export default function CallControls({
   camOn,
   setCamOn,
 }: Props) {
-  const { localStream, setLocalStream } = useCallStore();
+  const { localStream, setLocalStream, remoteProfile } = useCallStore();
   const [micOn, setMicOn] = useState(true);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reporting, setReporting] = useState(false);
 
   const toggleMic = async () => {
     const nextMic = !micOn;
@@ -118,6 +133,18 @@ export default function CallControls({
     }
   };
 
+  const handleReport = async () => {
+    if (reporting) return;
+
+    setReporting(true);
+    try {
+      await onReport();
+      setReportOpen(false);
+    } finally {
+      setReporting(false);
+    }
+  };
+
   return (
     <div className="flex items-center gap-3 border-t border-border/50 px-4 py-3">
       <div className="flex items-center gap-2">
@@ -157,6 +184,44 @@ export default function CallControls({
                 <SquareArrowRightExit />
               </span>
             </Button>
+
+            <AlertDialog open={reportOpen} onOpenChange={setReportOpen}>
+              <Button
+                variant="outline"
+                onClick={() => setReportOpen(true)}
+                disabled={actionLocked}
+                className="border-destructive/30 text-destructive hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+              >
+                <span>Report</span>
+                <span>
+                  <Flag />
+                </span>
+              </Button>
+
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Report {remoteProfile?.username}?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will send a report for the current call and end the
+                    session. Repeated reports can lead to a temporary ban.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+
+                <AlertDialogFooter>
+                  <AlertDialogCancel
+                    disabled={reporting}
+                  >
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleReport}
+                    disabled={reporting}
+                  >
+                    {reporting ? "Reporting..." : "Report user"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </>
         )}
       </div>
