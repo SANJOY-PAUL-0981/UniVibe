@@ -40,7 +40,7 @@ const BannedPage = async () => {
 
         <p className="font-bold text-5xl">403</p>
 
-        <div className="text-xs font-semibold text-muted-foreground">
+        <div className="text-sm font-semibold text-muted-foreground">
           <p>Univibe said: nah, not today</p>
           <p>You speedran getting banned. New record? 🏆</p>
           <p>We've seen bots behave better than you.</p>
