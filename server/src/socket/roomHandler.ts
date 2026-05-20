@@ -9,6 +9,7 @@ import {
 } from "../utils/roomutils.js";
 import { prisma } from "../lib/prisma.js";
 import type { MatchFilters } from "../utils/roomutils.js";
+import { checkRoomRateLimit } from "./middleware/socketRateLimiter.js";
 
 // This function is used to emit the 'match_found' event to both matched users with the necessary data
 async function emitMatchFound(
@@ -55,6 +56,12 @@ const roomHandler = (io: Server) => {
 
   io.on("connection", (socket) => {
     socket.on("join", async ({ profileId, filters, currentDomain }) => {
+
+      // Rate limit room join requests
+      if (!checkRoomRateLimit(socket)) {
+        return;
+      }
+
       try {
         if (timeoutMap.has(profileId)) {
           clearTimeout(timeoutMap.get(profileId));

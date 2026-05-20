@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import { useSocket } from "@/hooks/useSocket"
 import { useWebRTC } from "@/hooks/useWebRTC"
 import { useCallStore } from "@/store/useCallStore"
@@ -111,6 +112,12 @@ export default function ConnectingClient({ profileId, filters, currentDomain }: 
         socket.off("no_match_found")
         socket.off("error")
 
+        const handleRateLimit = ({ message }: { message?: string }) => {
+            const rateLimitMessage = message ?? "Too many requests. Please wait and try again."
+            setMessage(rateLimitMessage)
+            toast.error(rateLimitMessage)
+        }
+
         const parsedYearData = filters.filterYearData && filters.filterYearData.trim() !== ""
             ? parseInt(filters.filterYearData)
             : null
@@ -174,12 +181,15 @@ export default function ConnectingClient({ profileId, filters, currentDomain }: 
             setMessage(message)
         })
 
+        socket.on("rate-limit", handleRateLimit)
+
         return () => {
             socket.off("waiting")
             socket.off("searching_domain")
             socket.off("match_found")
             socket.off("no_match_found")
             socket.off("error")
+            socket.off("rate-limit", handleRateLimit)
         }
     }, [socket])
 

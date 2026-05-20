@@ -101,7 +101,9 @@ const SignupPage = () => {
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="you@example.com"
+                    placeholder="you@college.edu"
+                    pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]*\\.edu(\\.[a-z]{2,})*$"
+                    title="Email must contain .edu (for example: college.edu or college.edu.in)"
                     className="h-11 pl-9"
                   />
                 </div>

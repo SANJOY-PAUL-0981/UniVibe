@@ -187,6 +187,18 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
   }, [socket]);
 
   useEffect(() => {
+    const handleRateLimit = ({ message }: { message?: string }) => {
+      toast.error(message ?? "Too many requests. Please wait and try again.");
+    };
+
+    socket.on("rate-limit", handleRateLimit);
+
+    return () => {
+      socket.off("rate-limit", handleRateLimit);
+    };
+  }, [socket]);
+
+  useEffect(() => {
     if (remoteStream && skipInProgressRef.current === false) {
       setMode("connected");
       if (noMatchTimeoutRef.current) clearTimeout(noMatchTimeoutRef.current);
