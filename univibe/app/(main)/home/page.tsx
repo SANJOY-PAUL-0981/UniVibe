@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { MatchFilterPanel, type Filters } from "@/components/layouts/MatchFilterPanel";
+import {
+  MatchFilterPanel,
+  type Filters,
+} from "@/components/layouts/MatchFilterPanel";
 import { useCallStore } from "@/store/useCallStore";
 import { useMedia } from "@/hooks/useMedia";
 import { toast } from "sonner";
@@ -14,69 +17,112 @@ const Home = () => {
   const router = useRouter();
   const [enableFilters, setEnableFilters] = useState(false);
   const [filtersValid, setFiltersValid] = useState(true);
-  const [currentFilters, setCurrentFilters] = useState<Filters | null>(null)
+  const [currentFilters, setCurrentFilters] = useState<Filters | null>(null);
   const { setFilters } = useCallStore();
-  const { getMedia } = useMedia()
+  const { getMedia } = useMedia();
 
   const computeCurrentDomain = (filters: Filters | null): number => {
     if (!filters) {
       return 3;
     }
 
-    if (filters.filterByCollege.enabled && filters.filterByCollege.value.trim() !== "") {
+    if (
+      filters.filterByCollege.enabled &&
+      filters.filterByCollege.value.trim() !== ""
+    ) {
       return 0;
     }
 
-    if (filters.filterByYear.enabled && filters.filterByYear.value.trim() !== "") {
+    if (
+      filters.filterByYear.enabled &&
+      filters.filterByYear.value.trim() !== ""
+    ) {
       return 1;
     }
 
-    if (filters.filterByFieldOfStudy.enabled && filters.filterByFieldOfStudy.value.trim() !== "") {
+    if (
+      filters.filterByFieldOfStudy.enabled &&
+      filters.filterByFieldOfStudy.value.trim() !== ""
+    ) {
       return 2;
     }
 
     return 3;
-  }
+  };
 
   const handleStartCall = async (evt: React.FormEvent<HTMLFormElement>) => {
     try {
       evt.preventDefault();
-      await getMedia()
+
+      const response = await fetch("/api/report/ban_status", {
+        method: "POST",
+      });
+      const data = await response.json().catch(() => null);
+
+      if (data?.code === 401) {
+        toast.error("Unauthorized. Please sign in.");
+        router.push("/auth/login");
+        return;
+      }
+
+      if (data?.isBanned) {
+        router.push("/banned");
+        return;
+      }
+      await getMedia();
 
       if (enableFilters && !filtersValid) {
         return;
       }
 
-      const domain = computeCurrentDomain(currentFilters)
-      const filters = currentFilters
+      const domain = computeCurrentDomain(currentFilters);
+      const filters = currentFilters;
 
-      setFilters({
-        filterByGender: filters?.filterByGender.enabled ?? false,
-        filterGenderData: filters?.filterByGender.value ?? "",
-        filterByCollege: filters?.filterByCollege.enabled ?? false,
-        filterCollegeData: filters?.filterByCollege.value ?? "",
-        filterByFieldOfStudy: filters?.filterByFieldOfStudy.enabled ?? false,
-        filterFieldOfStudyData: filters?.filterByFieldOfStudy.value ?? "",
-        filterByYear: filters?.filterByYear.enabled ?? false,
-        filterYearData: filters?.filterByYear.value ?? "",
-      }, domain);
+      setFilters(
+        {
+          filterByGender: filters?.filterByGender.enabled ?? false,
+          filterGenderData: filters?.filterByGender.value ?? "",
+          filterByCollege: filters?.filterByCollege.enabled ?? false,
+          filterCollegeData: filters?.filterByCollege.value ?? "",
+          filterByFieldOfStudy: filters?.filterByFieldOfStudy.enabled ?? false,
+          filterFieldOfStudyData: filters?.filterByFieldOfStudy.value ?? "",
+          filterByYear: filters?.filterByYear.enabled ?? false,
+          filterYearData: filters?.filterByYear.value ?? "",
+        },
+        domain,
+      );
 
       const params = new URLSearchParams();
       params.set("currentDomain", String(domain));
-      params.set("filterByGender", String(filters?.filterByGender.enabled ?? false));
+      params.set(
+        "filterByGender",
+        String(filters?.filterByGender.enabled ?? false),
+      );
       params.set("filterGenderData", filters?.filterByGender.value ?? "");
-      params.set("filterByCollege", String(filters?.filterByCollege.enabled ?? false));
+      params.set(
+        "filterByCollege",
+        String(filters?.filterByCollege.enabled ?? false),
+      );
       params.set("filterCollegeData", filters?.filterByCollege.value ?? "");
-      params.set("filterByFieldOfStudy", String(filters?.filterByFieldOfStudy.enabled ?? false));
-      params.set("filterFieldOfStudyData", filters?.filterByFieldOfStudy.value ?? "");
-      params.set("filterByYear", String(filters?.filterByYear.enabled ?? false));
+      params.set(
+        "filterByFieldOfStudy",
+        String(filters?.filterByFieldOfStudy.enabled ?? false),
+      );
+      params.set(
+        "filterFieldOfStudyData",
+        filters?.filterByFieldOfStudy.value ?? "",
+      );
+      params.set(
+        "filterByYear",
+        String(filters?.filterByYear.enabled ?? false),
+      );
       params.set("filterYearData", filters?.filterByYear.value ?? "");
 
-      sessionStorage.setItem("fromHome", "true")
+      sessionStorage.setItem("fromHome", "true");
 
       router.push(`/call/connecting?${params.toString()}`);
     } catch (err) {
-      toast.error("Please Allow Media Access!")
+      toast.error("Please Allow Media Access!");
     }
   };
 

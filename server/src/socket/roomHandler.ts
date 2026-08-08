@@ -1,392 +1,515 @@
 import { type Server } from "socket.io";
 import {
-    makeActive,
-    randomMatch,
-    filterMatch,
-    onSkip,
-    onDisconnected,
-    updateWaitingUser
-} from "../utils/roomutils.js"
+  makeActive,
+  randomMatch,
+  filterMatch,
+  onSkip,
+  onDisconnected,
+  updateWaitingUser,
+} from "../utils/roomutils.js";
 import { prisma } from "../lib/prisma.js";
 import type { MatchFilters } from "../utils/roomutils.js";
+import { checkRoomRateLimit } from "./middleware/socketRateLimiter.js";
+
+// This function is used to emit the 'match_found' event to both matched users with the necessary data
+async function emitMatchFound(
+  io: Server,
+  socket: any,
+  matchedSocketId: string,
+  roomId: string,
+  profile1Id: string,
+  profile2Id: string,
+) {
+  const [p1, p2] = await Promise.all([
+    prisma.profile.findUnique({
+      where: { id: profile1Id },
+      select: { username: true, profilePicture: true },
+    }),
+    prisma.profile.findUnique({
+      where: { id: profile2Id },
+      select: { username: true, profilePicture: true },
+    }),
+  ]);
+
+  socket.emit("match_found", {
+    roomId,
+    isInitiator: true,
+    stranger: { username: p2?.username, profilePicture: p2?.profilePicture },
+  });
+
+  io.to(matchedSocketId).emit("match_found", {
+    roomId,
+    isInitiator: false,
+    stranger: { username: p1?.username, profilePicture: p1?.profilePicture },
+  });
+}
 
 const roomHandler = (io: Server) => {
-    const timeoutMap = new Map<string, NodeJS.Timeout>()
-    const socketRoomMap = new Map<string, { roomId: string, profileId: string }>()
-    const readyMap = new Map<string, Set<string>>()
-    const roomLock = new Set<string>()
-    const profileCooldown = new Map<string, number>()
+  const timeoutMap = new Map<string, NodeJS.Timeout>();
+  const socketRoomMap = new Map<
+    string,
+    { roomId: string; profileId: string }
+  >();
+  const readyMap = new Map<string, Set<string>>();
+  const roomLock = new Set<string>();
+  const profileCooldown = new Map<string, number>();
 
-    io.on('connection', (socket) => {
-        socket.on('join', async ({ profileId, filters, currentDomain }) => {
-            try {
-                if (timeoutMap.has(profileId)) {
-                    clearTimeout(timeoutMap.get(profileId));
-                    timeoutMap.delete(profileId);
-                }
-                console.log("User connected: ", socket.id)
-                let activeUser = await makeActive(profileId, socket.id, { ...filters, currentDomain })
+  io.on("connection", (socket) => {
+    socket.on("join", async ({ profileId, filters, currentDomain }) => {
 
-                if ('error' in activeUser) {
-                    socket.emit('error', { message: activeUser.error })
-                    return
-                }
+      // Rate limit room join requests
+      if (!checkRoomRateLimit(socket)) {
+        return;
+      }
 
-                const isRandom = !activeUser.waitingUser.filterByCollege &&
-                    !activeUser.waitingUser.filterByFieldOfStudy &&
-                    !activeUser.waitingUser.filterByGender &&
-                    !activeUser.waitingUser.filterByYear
+      try {
+        if (timeoutMap.has(profileId)) {
+          clearTimeout(timeoutMap.get(profileId));
+          timeoutMap.delete(profileId);
+        }
+        console.log("User connected: ", socket.id);
+        let activeUser = await makeActive(profileId, socket.id, {
+          ...filters,
+          currentDomain,
+        });
 
-                if (isRandom) {
-                    const match = await randomMatch(profileId, profileCooldown)
+        if ("error" in activeUser) {
+          socket.emit("error", { message: activeUser.error });
+          return;
+        }
 
-                    if (!match) {
-                        socket.emit('waiting', { message: 'looking for someone...' })
+        const isRandom =
+          !activeUser.waitingUser.filterByCollege &&
+          !activeUser.waitingUser.filterByFieldOfStudy &&
+          !activeUser.waitingUser.filterByGender &&
+          !activeUser.waitingUser.filterByYear;
 
-                        const timeOut = setTimeout(async () => {
-                            try {
-                                await prisma.waitingUser.delete({
-                                    where: { profileId }
-                                })
-                                socket.emit("no_match_found")
-                                timeoutMap.delete(profileId)
-                            } catch (err) {
-                                console.error(err)
-                            }
-                        }, 60000)
+        if (isRandom) {
+          const match = await randomMatch(profileId, profileCooldown);
 
-                        timeoutMap.set(profileId, timeOut)
-                        return
-                    }
+          if (!match) {
+            socket.emit("waiting", { message: "looking for someone..." });
 
-                    const roomId = match.session.roomId
-                    socket.join(roomId)
+            const timeOut = setTimeout(async () => {
+              try {
+                await prisma.waitingUser.delete({
+                  where: { profileId },
+                });
+                socket.emit("no_match_found");
+                timeoutMap.delete(profileId);
+              } catch (err) {
+                console.error(err);
+              }
+            }, 60000);
 
-                    socketRoomMap.set(socket.id, { roomId, profileId })
-                    socketRoomMap.set(match.matchedSocketId, { roomId, profileId: match.session.profile2Id })
+            timeoutMap.set(profileId, timeOut);
+            return;
+          }
 
-                    clearTimeout(timeoutMap.get(profileId))
-                    timeoutMap.delete(profileId)
-                    clearTimeout(timeoutMap.get(match.session.profile2Id))
-                    timeoutMap.delete(match.session.profile2Id)
+          const roomId = match.session.roomId;
+          socket.join(roomId);
 
-                    io.to(match.matchedSocketId).socketsJoin(roomId)
-                    socket.emit('match_found', { roomId, isInitiator: true })
-                    io.to(match.matchedSocketId).emit('match_found', { roomId, isInitiator: false })
-                } else {
-                    const profile = await prisma.profile.findUnique({
-                        where: { id: profileId }
-                    })
-                    if (!profile) {
-                        return null
-                    }
+          socketRoomMap.set(socket.id, { roomId, profileId });
+          socketRoomMap.set(match.matchedSocketId, {
+            roomId,
+            profileId: match.session.profile2Id,
+          });
 
-                    const getDuration = (domain: number, currentDomain: number) => {
-                        return domain === currentDomain ? 20 : 10
-                    }
+          clearTimeout(timeoutMap.get(profileId));
+          timeoutMap.delete(profileId);
+          clearTimeout(timeoutMap.get(match.session.profile2Id));
+          timeoutMap.delete(match.session.profile2Id);
 
-                    let domain = currentDomain
+          io.to(match.matchedSocketId).socketsJoin(roomId);
+          await emitMatchFound(
+            io,
+            socket,
+            match.matchedSocketId,
+            roomId,
+            profileId,
+            match.session.profile2Id,
+          );
+        } else {
+          const profile = await prisma.profile.findUnique({
+            where: { id: profileId },
+          });
+          if (!profile) {
+            return null;
+          }
 
-                    const isOnlyGender = filters.filterByGender &&
-                        !filters.filterByCollege &&
-                        !filters.filterByYear &&
-                        !filters.filterByFieldOfStudy
+          const getDuration = (domain: number, currentDomain: number) => {
+            return domain === currentDomain ? 20 : 10;
+          };
 
-                    if (isOnlyGender) {
-                        socket.emit('searching_domain', { domain: 3, duration: 60 })
-                        const matchWithGender = await filterMatch(profileId, 3, profileCooldown, filters)
+          let domain = currentDomain;
 
-                        if (matchWithGender) {
-                            const roomId = matchWithGender.session.roomId
+          const isOnlyGender =
+            filters.filterByGender &&
+            !filters.filterByCollege &&
+            !filters.filterByYear &&
+            !filters.filterByFieldOfStudy;
 
-                            socketRoomMap.set(socket.id, { roomId, profileId })
-                            socketRoomMap.set(matchWithGender.matchedSocketId, { roomId, profileId: matchWithGender.session.profile2Id })
+          if (isOnlyGender) {
+            socket.emit("searching_domain", { domain: 3, duration: 60 });
+            const matchWithGender = await filterMatch(
+              profileId,
+              3,
+              profileCooldown,
+              filters,
+            );
 
-                            clearTimeout(timeoutMap.get(profileId))
-                            timeoutMap.delete(profileId)
-                            clearTimeout(timeoutMap.get(matchWithGender.session.profile2Id))
-                            timeoutMap.delete(matchWithGender.session.profile2Id)
+            if (matchWithGender) {
+              const roomId = matchWithGender.session.roomId;
 
-                            socket.join(roomId)
-                            io.to(matchWithGender.matchedSocketId).socketsJoin(roomId)
-                            socket.emit('match_found', { roomId, isInitiator: true })
-                            io.to(matchWithGender.matchedSocketId).emit('match_found', { roomId, isInitiator: false })
-                            return
-                        }
+              socketRoomMap.set(socket.id, { roomId, profileId });
+              socketRoomMap.set(matchWithGender.matchedSocketId, {
+                roomId,
+                profileId: matchWithGender.session.profile2Id,
+              });
 
-                        socket.emit('waiting', { message: 'Looking for someone...' })
-                        const timeout = setTimeout(async () => {
-                            try {
-                                await prisma.waitingUser.delete({ where: { profileId } })
-                                socket.emit('no_match_found')
-                                timeoutMap.delete(profileId)
-                            } catch (err) {
-                                console.error(err)
-                            }
-                        }, 60000)
-                        timeoutMap.set(profileId, timeout)
-                        return
-                    }
-                    socket.emit('searching_domain', { domain, duration: getDuration(domain, currentDomain) })
+              clearTimeout(timeoutMap.get(profileId));
+              timeoutMap.delete(profileId);
+              clearTimeout(timeoutMap.get(matchWithGender.session.profile2Id));
+              timeoutMap.delete(matchWithGender.session.profile2Id);
 
-                    const tryFilterMatch = async () => {
-                        const currentFilters: MatchFilters = {
-                            ...filters,
-                            ...(domain === 1 && {
-                                filterByCollege: false,
-                                filterCollegeData: null,
-                                filterByYear: true,
-                                filterYearData: filters.filterYearData ?? profile.year
-                            }),
-                            ...(domain === 2 && {
-                                filterByCollege: false,
-                                filterCollegeData: null,
-                                filterByYear: false,
-                                filterYearData: null,
-                                filterByFieldOfStudy: true,
-                                filterFieldOfStudyData: filters.filterFieldOfStudyData || profile.fieldOfStudy
-                            })
-                        }
-
-                        if (domain < 3) {
-                            const matchWithFilter = await filterMatch(profileId, domain, profileCooldown, currentFilters)
-
-                            if (matchWithFilter) {
-                                const roomId = matchWithFilter.session.roomId
-
-                                socketRoomMap.set(socket.id, { roomId, profileId })
-                                socketRoomMap.set(matchWithFilter.matchedSocketId, { roomId, profileId: matchWithFilter.session.profile2Id })
-
-                                clearTimeout(timeoutMap.get(profileId))
-                                timeoutMap.delete(profileId)
-                                clearTimeout(timeoutMap.get(matchWithFilter.session.profile2Id))
-                                timeoutMap.delete(matchWithFilter.session.profile2Id)
-
-                                socket.join(roomId)
-                                io.to(matchWithFilter.matchedSocketId).socketsJoin(roomId)
-                                socket.emit('match_found', { roomId, isInitiator: true })
-                                io.to(matchWithFilter.matchedSocketId).emit('match_found', { roomId, isInitiator: false })
-                                return
-                            }
-
-                            const waitTime = domain === currentDomain ? 20000 : 10000
-                            socket.emit('waiting', { message: 'Looking for someone with matching interests...' })
-
-                            const timeOut = setTimeout(async () => {
-                                try {
-                                    console.log("timeout fired, domain was:", domain, "incrementing to:", domain + 1)
-                                    clearTimeout(timeoutMap.get(profileId))
-                                    timeoutMap.delete(profileId)
-                                    domain++
-
-                                    socket.emit('searching_domain', { domain: domain, duration: domain === 3 ? 60 : getDuration(domain, currentDomain) });
-
-                                    if (domain === 3) {
-                                        await updateWaitingUser(profileId, {
-                                            filterByCollege: false,
-                                            filterCollegeData: null,
-                                            filterByYear: false,
-                                            filterYearData: null,
-                                            filterByFieldOfStudy: false,
-                                            filterFieldOfStudyData: null,
-                                            filterByGender: false,
-                                            filterGenderData: null,
-                                            currentDomain: 3
-                                        })
-
-                                        const randomMatchResult = await randomMatch(profileId, profileCooldown)
-
-                                        if (randomMatchResult) {
-                                            const roomId = randomMatchResult.session.roomId
-
-                                            socketRoomMap.set(socket.id, { roomId, profileId })
-                                            socketRoomMap.set(randomMatchResult.matchedSocketId, { roomId, profileId: randomMatchResult.session.profile2Id })
-
-                                            clearTimeout(timeoutMap.get(profileId))
-                                            timeoutMap.delete(profileId)
-                                            clearTimeout(timeoutMap.get(randomMatchResult.session.profile2Id))
-                                            timeoutMap.delete(randomMatchResult.session.profile2Id)
-
-                                            socket.join(roomId)
-                                            io.to(randomMatchResult.matchedSocketId).socketsJoin(roomId)
-                                            socket.emit('match_found', { roomId, isInitiator: true })
-                                            io.to(randomMatchResult.matchedSocketId).emit('match_found', { roomId, isInitiator: false })
-                                            return
-                                        }
-
-                                        socket.emit('waiting', { message: "Looking for anyone..." })
-                                        const randomTimeout = setTimeout(async () => {
-                                            try {
-                                                await prisma.waitingUser.delete({ where: { profileId } })
-                                                socket.emit('no_match_found')
-                                                timeoutMap.delete(profileId)
-                                            } catch (err) {
-                                                console.error(err)
-                                            }
-                                        }, 60000)
-                                        timeoutMap.set(profileId, randomTimeout)
-                                        return
-                                    }
-
-                                    await updateWaitingUser(profileId, {
-                                        ...(domain === 1 && {
-                                            filterByCollege: false,
-                                            filterCollegeData: null,
-                                            filterByYear: true,
-                                            filterYearData: filters.filterYearData ?? profile.year,
-                                            currentDomain: 1
-                                        }),
-                                        ...(domain === 2 && {
-                                            filterByYear: false,
-                                            filterYearData: null,
-                                            filterByFieldOfStudy: true,
-                                            filterFieldOfStudyData: filters.filterFieldOfStudyData || profile.fieldOfStudy,
-                                            currentDomain: 2
-                                        })
-                                    })
-
-                                    await tryFilterMatch()
-                                } catch (err) {
-                                    console.error(err)
-                                }
-                            }, waitTime)
-                            timeoutMap.set(profileId, timeOut)
-                        }
-                    }
-                    await tryFilterMatch()
-                }
-            } catch (err) {
-                console.error(err)
+              socket.join(roomId);
+              io.to(matchWithGender.matchedSocketId).socketsJoin(roomId);
+              await emitMatchFound(
+                io,
+                socket,
+                matchWithGender.matchedSocketId,
+                roomId,
+                profileId,
+                matchWithGender.session.profile2Id,
+              );
+              return;
             }
-        })
 
-        socket.on('skip', async ({ roomId }) => {
-            try {
-                if (roomLock.has(roomId)) {
-                    return
-                }
+            socket.emit("waiting", { message: "Looking for someone..." });
+            const timeout = setTimeout(async () => {
+              try {
+                await prisma.waitingUser.delete({ where: { profileId } });
+                socket.emit("no_match_found");
+                timeoutMap.delete(profileId);
+              } catch (err) {
+                console.error(err);
+              }
+            }, 60000);
+            timeoutMap.set(profileId, timeout);
+            return;
+          }
+          socket.emit("searching_domain", {
+            domain,
+            duration: getDuration(domain, currentDomain),
+          });
 
-                roomLock.add(roomId)
+          const tryFilterMatch = async () => {
+            const currentFilters: MatchFilters = {
+              ...filters,
+              ...(domain === 1 && {
+                filterByCollege: false,
+                filterCollegeData: null,
+                filterByYear: true,
+                filterYearData: filters.filterYearData ?? profile.year,
+              }),
+              ...(domain === 2 && {
+                filterByCollege: false,
+                filterCollegeData: null,
+                filterByYear: false,
+                filterYearData: null,
+                filterByFieldOfStudy: true,
+                filterFieldOfStudyData:
+                  filters.filterFieldOfStudyData || profile.fieldOfStudy,
+              }),
+            };
 
+            if (domain < 3) {
+              const matchWithFilter = await filterMatch(
+                profileId,
+                domain,
+                profileCooldown,
+                currentFilters,
+              );
+
+              if (matchWithFilter) {
+                const roomId = matchWithFilter.session.roomId;
+
+                socketRoomMap.set(socket.id, { roomId, profileId });
+                socketRoomMap.set(matchWithFilter.matchedSocketId, {
+                  roomId,
+                  profileId: matchWithFilter.session.profile2Id,
+                });
+
+                clearTimeout(timeoutMap.get(profileId));
+                timeoutMap.delete(profileId);
+                clearTimeout(
+                  timeoutMap.get(matchWithFilter.session.profile2Id),
+                );
+                timeoutMap.delete(matchWithFilter.session.profile2Id);
+
+                socket.join(roomId);
+                io.to(matchWithFilter.matchedSocketId).socketsJoin(roomId);
+                await emitMatchFound(
+                  io,
+                  socket,
+                  matchWithFilter.matchedSocketId,
+                  roomId,
+                  profileId,
+                  matchWithFilter.session.profile2Id,
+                );
+                return;
+              }
+
+              const waitTime = domain === currentDomain ? 20000 : 10000;
+              socket.emit("waiting", {
+                message: "Looking for someone with matching interests...",
+              });
+
+              const timeOut = setTimeout(async () => {
                 try {
-                    const sockets = await io.in(roomId).fetchSockets()
-                    const socket1Id = sockets[0]?.id
-                    const socket2Id = sockets[1]?.id
+                  console.log(
+                    "timeout fired, domain was:",
+                    domain,
+                    "incrementing to:",
+                    domain + 1,
+                  );
+                  clearTimeout(timeoutMap.get(profileId));
+                  timeoutMap.delete(profileId);
+                  domain++;
 
-                    if (!socket1Id || !socket2Id) {
-                        return
-                    }
+                  socket.emit("searching_domain", {
+                    domain: domain,
+                    duration:
+                      domain === 3 ? 60 : getDuration(domain, currentDomain),
+                  });
 
-                    socket.to(roomId).emit("peer_skipping")
-                    const result = await onSkip(roomId, socket1Id, socket2Id)
-                    if (result) {
-                        profileCooldown.set(result.profile1Id, Date.now())
-                        profileCooldown.set(result.profile2Id, Date.now())
-                    }
-                    if (!result) return
+                  if (domain === 3) {
+                    await updateWaitingUser(profileId, {
+                      filterByCollege: false,
+                      filterCollegeData: null,
+                      filterByYear: false,
+                      filterYearData: null,
+                      filterByFieldOfStudy: false,
+                      filterFieldOfStudyData: null,
+                      filterByGender: false,
+                      filterGenderData: null,
+                      currentDomain: 3,
+                    });
 
-                    io.to(roomId).emit('skipped')
-                    io.socketsLeave(roomId)
-                    socketRoomMap.delete(socket1Id)
-                    socketRoomMap.delete(socket2Id)
-                } finally {
-                    roomLock.delete(roomId)
-                }
-            } catch (err) {
-                console.error(err)
-                roomLock.delete(roomId)
-            }
-        })
+                    const randomMatchResult = await randomMatch(
+                      profileId,
+                      profileCooldown,
+                    );
 
-        socket.on('disconnect', async () => {
-            try {
-                console.log('DISCONNECTED:', socket.id)
+                    if (randomMatchResult) {
+                      const roomId = randomMatchResult.session.roomId;
 
-                const socketData = socketRoomMap.get(socket.id)
+                      socketRoomMap.set(socket.id, { roomId, profileId });
+                      socketRoomMap.set(randomMatchResult.matchedSocketId, {
+                        roomId,
+                        profileId: randomMatchResult.session.profile2Id,
+                      });
 
-                if (!socketData) {
-                    const waitingUser = await prisma.waitingUser.findFirst({
-                        where: { socketId: socket.id }
-                    })
+                      clearTimeout(timeoutMap.get(profileId));
+                      timeoutMap.delete(profileId);
+                      clearTimeout(
+                        timeoutMap.get(randomMatchResult.session.profile2Id),
+                      );
+                      timeoutMap.delete(randomMatchResult.session.profile2Id);
 
-                    if (waitingUser) {
-                        clearTimeout(timeoutMap.get(waitingUser.profileId))
-                        timeoutMap.delete(waitingUser.profileId)
-                    }
-
-                    await prisma.waitingUser.deleteMany({
-                        where: { socketId: socket.id }
-                    })
-
-                    return
-                }
-
-                const { roomId, profileId } = socketData
-
-                const sockets = await io.in(roomId).fetchSockets()
-                const remainingSocket = sockets.find(s => s.id !== socket.id)
-                const remainingSocketId = remainingSocket?.id
-
-                if (!remainingSocketId) {
-                    await prisma.callSession.delete({
-                        where: { roomId }
-                    }).catch(() => { })
-
-                    socketRoomMap.delete(socket.id)
-                } else {
-                    const result = await onDisconnected(
+                      socket.join(roomId);
+                      io.to(randomMatchResult.matchedSocketId).socketsJoin(
+                        roomId,
+                      );
+                      await emitMatchFound(
+                        io,
+                        socket,
+                        randomMatchResult.matchedSocketId,
                         roomId,
                         profileId,
-                        remainingSocketId
-                    )
-
-                    if (result) {
-                        io.to(remainingSocketId).emit('peer_disconnected')
+                        randomMatchResult.session.profile2Id,
+                      );
+                      return;
                     }
 
-                    socketRoomMap.delete(socket.id)
-                    socketRoomMap.delete(remainingSocketId)
+                    socket.emit("waiting", {
+                      message: "Looking for anyone...",
+                    });
+                    const randomTimeout = setTimeout(async () => {
+                      try {
+                        await prisma.waitingUser.delete({
+                          where: { profileId },
+                        });
+                        socket.emit("no_match_found");
+                        timeoutMap.delete(profileId);
+                      } catch (err) {
+                        console.error(err);
+                      }
+                    }, 60000);
+                    timeoutMap.set(profileId, randomTimeout);
+                    return;
+                  }
+
+                  await updateWaitingUser(profileId, {
+                    ...(domain === 1 && {
+                      filterByCollege: false,
+                      filterCollegeData: null,
+                      filterByYear: true,
+                      filterYearData: filters.filterYearData ?? profile.year,
+                      currentDomain: 1,
+                    }),
+                    ...(domain === 2 && {
+                      filterByYear: false,
+                      filterYearData: null,
+                      filterByFieldOfStudy: true,
+                      filterFieldOfStudyData:
+                        filters.filterFieldOfStudyData || profile.fieldOfStudy,
+                      currentDomain: 2,
+                    }),
+                  });
+
+                  await tryFilterMatch();
+                } catch (err) {
+                  console.error(err);
                 }
-
-                clearTimeout(timeoutMap.get(profileId))
-                timeoutMap.delete(profileId)
-
-                await prisma.waitingUser.deleteMany({
-                    where: {
-                        OR: [
-                            { socketId: socket.id },
-                            { profileId }
-                        ]
-                    }
-                })
-
-                await prisma.callSession.delete({
-                    where: { roomId }
-                }).catch(() => { })
-
-            } catch (err) {
-                console.error(err)
+              }, waitTime);
+              timeoutMap.set(profileId, timeOut);
             }
-        })
+          };
+          await tryFilterMatch();
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    });
 
-        socket.on("client_ready", ({ roomId }) => {
-            if (!readyMap.has(roomId)) {
-                readyMap.set(roomId, new Set())
-            }
+    socket.on("skip", async ({ roomId }) => {
+      try {
+        if (roomLock.has(roomId)) {
+          return;
+        }
 
-            const set = readyMap.get(roomId)!
-            set.add(socket.id)
+        roomLock.add(roomId);
 
-            console.log("client_ready:", roomId, set.size)
+        try {
+          const sockets = await io.in(roomId).fetchSockets();
+          const socket1Id = sockets[0]?.id;
+          const socket2Id = sockets[1]?.id;
 
-            if (set.size === 2) {
-                console.log("Both ready → emitting ready")
+          if (!socket1Id || !socket2Id) {
+            return;
+          }
 
-                io.to(roomId).emit("ready")
-                readyMap.delete(roomId)
-            }
-        })
-    })
-}
+          socket.to(roomId).emit("peer_skipping");
+          const result = await onSkip(roomId, socket1Id, socket2Id);
+          if (result) {
+            profileCooldown.set(result.profile1Id, Date.now());
+            profileCooldown.set(result.profile2Id, Date.now());
+          }
+          if (!result) return;
+
+          io.to(roomId).emit("skipped");
+          io.socketsLeave(roomId);
+          socketRoomMap.delete(socket1Id);
+          socketRoomMap.delete(socket2Id);
+        } finally {
+          roomLock.delete(roomId);
+        }
+      } catch (err) {
+        console.error(err);
+        roomLock.delete(roomId);
+      }
+    });
+
+    socket.on("disconnect", async () => {
+      try {
+        console.log("DISCONNECTED:", socket.id);
+
+        const socketData = socketRoomMap.get(socket.id);
+
+        if (!socketData) {
+          const waitingUser = await prisma.waitingUser.findFirst({
+            where: { socketId: socket.id },
+          });
+
+          if (waitingUser) {
+            clearTimeout(timeoutMap.get(waitingUser.profileId));
+            timeoutMap.delete(waitingUser.profileId);
+          }
+
+          await prisma.waitingUser.deleteMany({
+            where: { socketId: socket.id },
+          });
+
+          return;
+        }
+
+        const { roomId, profileId } = socketData;
+
+        const sockets = await io.in(roomId).fetchSockets();
+        const remainingSocket = sockets.find((s) => s.id !== socket.id);
+        const remainingSocketId = remainingSocket?.id;
+
+        if (!remainingSocketId) {
+          await prisma.callSession
+            .delete({
+              where: { roomId },
+            })
+            .catch(() => {});
+
+          socketRoomMap.delete(socket.id);
+        } else {
+          const result = await onDisconnected(
+            roomId,
+            profileId,
+            remainingSocketId,
+          );
+
+          if (result) {
+            io.to(remainingSocketId).emit("peer_disconnected");
+          }
+
+          socketRoomMap.delete(socket.id);
+          socketRoomMap.delete(remainingSocketId);
+        }
+
+        clearTimeout(timeoutMap.get(profileId));
+        timeoutMap.delete(profileId);
+
+        await prisma.waitingUser.deleteMany({
+          where: {
+            OR: [{ socketId: socket.id }, { profileId }],
+          },
+        });
+
+        await prisma.callSession
+          .delete({
+            where: { roomId },
+          })
+          .catch(() => {});
+      } catch (err) {
+        console.error(err);
+      }
+    });
+
+    socket.on("client_ready", ({ roomId }) => {
+      if (!readyMap.has(roomId)) {
+        readyMap.set(roomId, new Set());
+      }
+
+      const set = readyMap.get(roomId)!;
+      set.add(socket.id);
+
+      console.log("client_ready:", roomId, set.size);
+
+      if (set.size === 2) {
+        console.log("Both ready → emitting ready");
+
+        io.to(roomId).emit("ready");
+        readyMap.delete(roomId);
+      }
+    });
+  });
+};
 
 export default roomHandler;

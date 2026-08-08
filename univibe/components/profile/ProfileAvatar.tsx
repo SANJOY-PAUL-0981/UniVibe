@@ -1,9 +1,12 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Camera, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import {
+  selectProfileStoreProfilePicture,
+  useProfileStore,
+} from "@/store/useProfileStore";
 
 type Props = {
   initials: string;
@@ -11,13 +14,21 @@ type Props = {
 };
 
 export function ProfileAvatar({ initials, imageUrl }: Props) {
-  const router = useRouter();
-  const [preview, setPreview] = useState<string | null>(imageUrl ?? null);
+  const storeImageUrl = useProfileStore(selectProfileStoreProfilePicture);
+  const updateProfilePartial = useProfileStore((state) => state.updateProfilePartial);
+  const [preview, setPreview] = useState<string | null>(storeImageUrl ?? imageUrl ?? null);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const isBusy = uploading || deleting;
 
+  useEffect(() => {
+    if (isBusy) {
+      return;
+    }
+
+    setPreview(storeImageUrl ?? null);
+  }, [storeImageUrl, imageUrl, isBusy]);
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -43,8 +54,8 @@ export function ProfileAvatar({ initials, imageUrl }: Props) {
 
       URL.revokeObjectURL(localUrl);
       setPreview(data.imageUrl);
+      updateProfilePartial({ profilePicture: data.imageUrl });
       toast.success("Profile photo updated");
-      router.refresh();
     } catch (error) {
       URL.revokeObjectURL(localUrl);
       setPreview(previousPreview);
@@ -72,8 +83,8 @@ export function ProfileAvatar({ initials, imageUrl }: Props) {
       }
 
       setPreview(null);
+      updateProfilePartial({ profilePicture: null });
       toast.success("Profile photo removed");
-      router.refresh();
     } catch (error) {
       setPreview(previousPreview);
       toast.error(error instanceof Error ? error.message : "Failed to delete avatar");
