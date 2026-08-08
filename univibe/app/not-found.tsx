@@ -25,7 +25,7 @@ export default function NotFound() {
                 </div>
 
                 <div className="flex gap-5">
-                    <Link href="/" className="btn text-sm font-bold">
+                    <Link href="/home" className="btn text-sm font-bold">
                         Back To Home!
                     </Link>
                 </div>

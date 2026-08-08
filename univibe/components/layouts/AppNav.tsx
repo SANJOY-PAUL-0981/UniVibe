@@ -39,7 +39,7 @@ const AppNav = () => {
       <div
         className={`${isVisible ? "in-view" : ""} mx-auto h-24 max-w-7xl px-3`}
       >
-        <div className="flex h-full items-center gap-5 md:gap-8">
+        <div className="flex h-full items-center md:gap-8">
           {/* Logo — same as Header */}
           <div className="flex items-center gap-2 text-4xl font-bold reveal-right">
             <Image
@@ -52,7 +52,7 @@ const AppNav = () => {
           </div>
 
           {/* Navbar */}
-          <nav className="hidden flex-1 justify-center md:flex reveal-down">
+          <nav className="hidden flex-1 justify-center md:flex reveal-down pr-48">
             <ul className="flex h-12 items-center gap-1 rounded-full bg-muted/50 p-1.5">
               {navItems.map((item) => {
                 const active = pathname === item.href;

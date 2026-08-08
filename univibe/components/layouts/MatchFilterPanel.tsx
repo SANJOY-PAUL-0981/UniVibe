@@ -110,7 +110,7 @@ export function MatchFilterPanel({ onValidityChange, onFiltersChange }: Props) {
     }, [filters, onValidityChange, onFiltersChange]);
 
     return (
-        <div className="w-full max-w-4xl rounded-xl border border-border/70 bg-card p-5 shadow-sm">
+        <div className="w-[70vw] max-w-4xl rounded-xl border border-border/70 bg-card p-5 shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
                 Matchmaking filters
             </p>
