@@ -3,7 +3,8 @@
 import { MailIcon, LockIcon } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 import { signIn } from "@/lib/auth-client";
 
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ const LoginPage = () => {
     null,
   );
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleSubmit = async (evt: React.FormEvent<HTMLFormElement>) => {
     evt.preventDefault();
@@ -58,6 +60,13 @@ const LoginPage = () => {
     }
   };
 
+  useEffect(() => {
+    const err = searchParams.get("error");
+    if (err === "edu_email_required") {
+      toast.error("Only educational emails containing .edu are allowed");
+    }
+  }, [searchParams]);
+
   return (
     <main className="relative min-h-dvh overflow-hidden bg-background px-4 py-10 sm:px-6 lg:px-8">
       <div className="pointer-events-none absolute inset-0" />
@@ -87,7 +96,9 @@ const LoginPage = () => {
                     id="email"
                     type="email"
                     name="email"
-                    placeholder="you@example.com"
+                    placeholder="you@college.edu"
+                    pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]*\\.edu(\\.[a-z]{2,})*$"
+                    title="Email must contain .edu (for example: college.edu or college.edu.in)"
                     className="h-11 pl-9"
                     autoFocus
                   />

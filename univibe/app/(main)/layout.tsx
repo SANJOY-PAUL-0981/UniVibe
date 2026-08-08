@@ -1,6 +1,6 @@
 import AppNav from "@/components/layouts/AppNav";
 import { getMainUserData } from "@/lib/getMainUserData";
-
+import ProfileStoreHydrator from "@/components/provider/ProfileStoreHydrator";
 type MainLayoutProps = {
   children: React.ReactNode;
 };
@@ -10,7 +10,8 @@ export default async function MainLayout({ children }: MainLayoutProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppNav username={user.profile.username} name={user.name} imageUrl={user.profile.profilePicture} />
+      <ProfileStoreHydrator initialUser={user} />
+      <AppNav />
       {children}
     </div>
   );

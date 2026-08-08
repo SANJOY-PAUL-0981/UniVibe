@@ -6,10 +6,8 @@ import Image from "next/image";
 import { useAnimateOnScroll } from "@/hooks/useAnimateOnScroll";
 
 const navItems = [
-  { label: "Focus Room", href: "#" },
   { label: "How it works", href: "#" },
   { label: "Rules", href: "#" },
-  { label: "Blog", href: "#" },
   { label: "Contact Us", href: "#" },
 ];
 
@@ -17,12 +15,11 @@ const navItems = [
 const Header = () => {
   const { ref, isVisible } = useAnimateOnScroll();
   return (
-    <header ref={ref} className="px-4 pt-4 md:px-8">
+    <header ref={ref} className="pt-4">
       <div
-        className={`${isVisible ? "in-view" : ""} mx-auto h-24 max-w-7xl px-3`}
-      >
+        className={`${isVisible ? "in-view" : ""} mx-auto h-24 max-w-7xl flex justify-around`}>
         <div className="flex h-full items-center gap-5 md:gap-8">
-          <div className="flex items-center gap-2 text-4xl font-bold reveal-right">
+          <div className="flex items-center gap-2 text-4xl font-bold reveal-right pr-40">
             <Image
               src="/logo.png"
               alt="Logo"
@@ -32,7 +29,7 @@ const Header = () => {
             />
           </div>
 
-          <nav className="hidden flex-1 justify-center md:flex reveal-down">
+          <nav className="hidden flex-1 justify-center md:flex reveal-down pr-60">
             <ul className="flex h-12 items-center gap-1 rounded-full bg-muted/50 p-1.5">
               {navItems.map((item) => (
                 <li key={item.label}>

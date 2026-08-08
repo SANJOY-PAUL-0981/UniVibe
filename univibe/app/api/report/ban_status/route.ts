@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
             })
         }
 
-        let isBanned = user.profile?.isBanned
+        let isBanned = user.profile?.isBanned ?? false
 
         if (user.profile?.isBanned && user.profile.bannedAt) {
             const bannedTime = new Date(user.profile.bannedAt).getTime()
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
                         reportCount: 0
                     }
                 })
-                isBanned: false
+                isBanned = false
             }
         }
 

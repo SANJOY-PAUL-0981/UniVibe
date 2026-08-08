@@ -1,64 +1,93 @@
-import { create } from "zustand"
+import { create } from "zustand";
 
 type Filters = {
-    filterByGender: boolean;
-    filterGenderData: string;
-    filterByCollege: boolean;
-    filterCollegeData: string;
-    filterByYear: boolean;
-    filterYearData: string;
-    filterByFieldOfStudy: boolean;
-    filterFieldOfStudyData: string;
-}
+  filterByGender: boolean;
+  filterGenderData: string;
+  filterByCollege: boolean;
+  filterCollegeData: string;
+  filterByYear: boolean;
+  filterYearData: string;
+  filterByFieldOfStudy: boolean;
+  filterFieldOfStudyData: string;
+};
 
-type CallStatus = "idle" | "waiting" | "connected" | "ended"
+type CallStatus = "idle" | "waiting" | "connected" | "ended";
 
 type CallStore = {
-    localStream: MediaStream | null;
-    remoteStream: MediaStream | null;
-    roomId: string | null;
-    callStatus: CallStatus;
-    filters: Filters;
-    currentDomain: number;
+  localStream: MediaStream | null;
+  remoteStream: MediaStream | null;
+  remoteCamOn: boolean;
+  remoteAudioOn: boolean;
+  remoteProfile: {
+    id?: string;
+    username?: string;
+    profilePicture?: string | null;
+  } | null;
+  roomId: string | null;
+  callStatus: CallStatus;
+  filters: Filters;
+  currentDomain: number;
 
-    setLocalStream: (stream: MediaStream | null) => void;
-    setRemoteStream: (stream: MediaStream | null) => void;
-    setRoomId: (id: string | null) => void;
-    setCallStatus: (status: CallStatus) => void;
-    setFilters: (filters: Filters, currentDomain: number) => void;
-    reset: () => void;
-}
+  setLocalStream: (stream: MediaStream | null) => void;
+  setRemoteStream: (stream: MediaStream | null) => void;
+  setRemoteCamOn: (value: boolean) => void;
+  setRemoteAudioOn: (value: boolean) => void;
+  setRemoteProfile: (
+    p: {
+      id?: string;
+      username?: string;
+      profilePicture?: string | null;
+    } | null,
+  ) => void;
+  setRoomId: (id: string | null) => void;
+  setCallStatus: (status: CallStatus) => void;
+  setFilters: (filters: Filters, currentDomain: number) => void;
+  reset: () => void;
+};
 
 const defaultFilters: Filters = {
-    filterByGender: false,
-    filterGenderData: "",
-    filterByCollege: false,
-    filterCollegeData: "",
-    filterByYear: false,
-    filterYearData: "",
-    filterByFieldOfStudy: false,
-    filterFieldOfStudyData: ""
-}
+  filterByGender: false,
+  filterGenderData: "",
+  filterByCollege: false,
+  filterCollegeData: "",
+  filterByYear: false,
+  filterYearData: "",
+  filterByFieldOfStudy: false,
+  filterFieldOfStudyData: "",
+};
 
 export const useCallStore = create<CallStore>((set) => ({
-    localStream: null,
-    remoteStream: null,
-    roomId: null,
-    callStatus: "idle",
-    filters: defaultFilters,
-    currentDomain: 3,
+  localStream: null,
+  remoteStream: null,
+  remoteCamOn: false,
+  remoteAudioOn: false,
+  remoteProfile: null,
+  roomId: null,
+  callStatus: "idle",
+  filters: defaultFilters,
+  currentDomain: 3,
 
-    setLocalStream: (stream) => set({ localStream: stream }),
-    setRemoteStream: (stream) => set({ remoteStream: stream }),
-    setRoomId: (id) => set({ roomId: id }),
-    setCallStatus: (status) => set({ callStatus: status }),
-    setFilters: (filters, currentDomain) => set({ filters, currentDomain }),
-    reset: () => set({
-        localStream: null,
-        remoteStream: null,
-        roomId: null,
-        callStatus: "idle",
-        filters: defaultFilters,
-        currentDomain: 3
-    })
-}))
+  setLocalStream: (stream) => set({ localStream: stream }),
+  setRemoteStream: (stream) => set({ remoteStream: stream }),
+  setRemoteCamOn: (value) => set({ remoteCamOn: value }),
+  setRemoteAudioOn: (value) => set({ remoteAudioOn: value }),
+  setRemoteProfile: (p) => set({ remoteProfile: p }),
+  setRoomId: (id) => set({ roomId: id }),
+  setCallStatus: (status) => set({ callStatus: status }),
+  setFilters: (filters, currentDomain) => set({ filters, currentDomain }),
+  reset: () => {
+    const { localStream, remoteStream } = useCallStore.getState();
+    localStream?.getTracks().forEach((track) => track.stop());
+    remoteStream?.getTracks().forEach((track) => track.stop());
+    set({
+      localStream: null,
+      remoteStream: null,
+      remoteCamOn: false,
+      remoteAudioOn: false,
+      remoteProfile: null,
+      roomId: null,
+      callStatus: "idle",
+      filters: defaultFilters,
+      currentDomain: 3,
+    });
+  },}));

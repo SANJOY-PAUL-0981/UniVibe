@@ -1,20 +1,16 @@
 "use client"
 
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
 const Room = () => {
-  const router = useRouter()
-
-  const handleStartGroupCall = () => {
-    const groupId = crypto.randomUUID()
-    router.push(`/group/${groupId}`)
-  }
 
   return (
-    <div className="flex flex-col items-center justify-center gap-4">
-      <div>Room</div>
-      <Button onClick={handleStartGroupCall}>Start Group Call</Button>
+    <div className="flex flex-col items-center justify-center gap-4 text-5xl font-bold h-[80vh]">
+      Coming Soon!
+      <Link href="/home">
+        <Button className={"cursor-pointer"}>Home</Button>
+      </Link>
     </div>
   )
 }
