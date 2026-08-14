@@ -4,16 +4,39 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useAnimateOnScroll } from "@/hooks/useAnimateOnScroll";
+import { usePathname, useRouter } from "next/navigation";
 
 const navItems = [
-  { label: "How it works", href: "#" },
-  { label: "Rules", href: "#" },
-  { label: "Contact Us", href: "#" },
+  { label: "How it works", href: "#howitworks" },
+  { label: "Rules", href: "#rules" },
+  { label: "Contact Us", href: "#contactus" },
 ];
 
 
 const Header = () => {
   const { ref, isVisible } = useAnimateOnScroll();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const handleNavClick = (
+    event: React.MouseEvent<HTMLAnchorElement>,
+    href: string,
+  ) => {
+    if (!href.startsWith("#")) return;
+
+    if (pathname !== "/") {
+      event.preventDefault();
+      router.push(`/${href}`);
+      return;
+    }
+
+    event.preventDefault();
+    const target = document.querySelector(href);
+    if (target instanceof HTMLElement) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   return (
     <header ref={ref} className="pt-4">
       <div
@@ -35,6 +58,7 @@ const Header = () => {
                 <li key={item.label}>
                   <Link
                     href={item.href}
+                    onClick={(event) => handleNavClick(event, item.href)}
                     className={[
                       "inline-flex h-10 items-center rounded-full px-6 text-base font-medium text-foreground/80 transition-colors",
                       "hover:bg-accent hover:text-accent-foreground",

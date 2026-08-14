@@ -13,35 +13,35 @@ export default async function ProfilePage() {
         .split(/[\s_-]+/).map((w: string) => w[0]).join("").toUpperCase().slice(0, 2);
 
     return (
-        <main className="mx-auto max-w-5xl px-4 py-8 md:px-8">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <main className="mx-auto max-w-5xl px-4 py-10 md:px-8">
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
 
                     {/* ── Card 1: Identity (spans 2 cols) ── */}
-                    <div className="relative md:col-span-2 rounded-2xl border border-border/70 bg-card p-8 shadow-sm">
-                        <div className="flex items-center gap-6">
+                    <div className="flex relative md:col-span-2 rounded-2xl border border-border/70 bg-card p-10 shadow-sm">
+                        <div className="flex items-center gap-7">
                             <ProfileAvatar initials={initials} imageUrl={user.profile.profilePicture} />
                             <div>
-                                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                                <p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
                                     @{profile.username}
                                 </p>
-                                <h1 className="text-3xl font-semibold tracking-tight">{user.name}</h1>
-                                <p className="text-sm text-muted-foreground">{user.email}</p>
+                                <h1 className="text-5xl font-semibold tracking-tight">{user.name}</h1>
+                                <p className="text-md text-muted-foreground">{user.email}</p>
                             </div>
                         </div>
 
                         {/* Sign out — top right */}
-                        <form action={signOutAction} className="absolute right-6 top-6">
-                            <Button type="submit" variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground rounded-full">
-                                <LogOut className="h-4 w-4" />
+                        <form action={signOutAction} className="absolute right-7 top-7">
+                            <Button type="submit" variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground rounded-full">
+                                <LogOut className="h-5 w-5" />
                                 Sign out
                             </Button>
                         </form>
                     </div>
 
                     {/* ── Card 2: Personal Details ── */}
-                    <div className="rounded-2xl border border-border/70 bg-card p-6 shadow-sm">
+                    <div className="rounded-2xl border border-border/70 bg-card p-7 shadow-sm">
                         <SectionTitle>Personal</SectionTitle>
-                        <div className="mt-3 flex flex-col gap-2">
+                        <div className="mt-4 flex flex-col gap-3">
                             <Field label="Gender" value={profile.gender} />
                             <Field label="Age" value={profile.age?.toString()} />
                             <Field label="Pronouns" value={profile.pronouns} />
@@ -49,9 +49,9 @@ export default async function ProfilePage() {
                     </div>
 
                     {/* ── Card 3: Education (spans 2 cols) ── */}
-                    <div className="rounded-2xl border border-border/70 bg-card p-6 shadow-sm md:col-span-2">
+                    <div className="rounded-2xl border border-border/70 bg-card p-7 shadow-sm md:col-span-2">
                         <SectionTitle>Education</SectionTitle>
-                        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">               
+                        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <Field label="College" value={profile.college} />
                             <Field label="Field of Study" value={profile.fieldOfStudy} />
                             <Field label="Semester" value={profile.semester?.toString()} />
@@ -72,7 +72,7 @@ export default async function ProfilePage() {
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
     return (
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
             {children}
         </h2>
     );
@@ -81,9 +81,9 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 function Field({ label, value }: { label: string; value?: string | null }) {
     if (!value) return null;
     return (
-        <div className="flex flex-col gap-1 rounded-lg bg-muted/50 px-3 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-            <span className="text-xs text-muted-foreground">{label}</span>
-            <span className="min-w-0 wrap-break-words text-sm font-medium sm:text-right">{value}</span>
+        <div className="flex flex-col gap-1.5 rounded-lg bg-muted/50 px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+            <span className="text-sm text-muted-foreground">{label}</span>
+            <span className="min-w-0 wrap-break-words text-base font-medium sm:text-right">{value}</span>
         </div>
     );
 }

@@ -111,11 +111,11 @@ export function MatchFilterPanel({ onValidityChange, onFiltersChange }: Props) {
 
     return (
         <div className="w-[70vw] max-w-4xl rounded-xl border border-border/70 bg-card p-5 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+            <p className="text-lg font-semibold uppercase tracking-widest text-muted-foreground mb-4">
                 Matchmaking filters
             </p>
 
-            <p className="text-xs text-muted-foreground mb-2">Narrow by</p>
+            <p className="text-md text-muted-foreground mb-2">Narrow by</p>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 {FILTER_META.map((item) => {
                     const filterState = filters[item.key];
@@ -180,10 +180,10 @@ function FilterCard({
         <div className="rounded-lg border border-border/60 bg-muted/20 p-3 flex flex-col justify-between min-h-[110px]">
             <div className="flex items-start justify-between">
                 <div>
-                    <Label htmlFor={id} className="cursor-pointer text-sm font-medium">
+                    <Label htmlFor={id} className="cursor-pointer text-md font-medium">
                         {label}
                     </Label>
-                    <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">{sub}</p>
                 </div>
                 <Switch id={id} checked={enabled} onCheckedChange={onToggle} />
             </div>

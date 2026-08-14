@@ -131,36 +131,85 @@ const Home = () => {
       <div className="w-[65vw]">
         <div className="py-5">
           <h2 className="text-3xl font-bold py-5">How it Works</h2>
-          <ol className="pl-10 list-decimal">
-            <li>UniVibe is a anonymous random video calling platform for University students in India.</li>
-            <li>In random call when a user starts a call then he/she gets paired with the person in the waiting queue for the longest.</li>
-            <li>In filtered call, suppose a user calling with filtered college. Suppose user1 is from clg-A and searching someone form clg-B and user2 is from clg-B and searching for someone from clg-A. Then user1 & user2 will be paired.</li>
-            <li>We have fallback for filtered calls. We have a call hierarchy College → Year → Field Of Study → Random. Suppose someone searching with college and no match found then search will fallback to college and every fallback search will happen for 20sec until no users found.</li>
+          <ol className="pl-10 list-decimal space-y-3">
+            <li>
+              <strong>UniVibe</strong> is an anonymous random video-calling
+              platform built exclusively for university students across India,
+              making it easy to meet and connect with new people.
+            </li>
+
+            <li>
+              <strong>Random Calls:</strong> When a user starts a random call,
+              UniVibe pairs them with the person who has been waiting in the
+              queue the longest. This ensures that users are matched fairly
+              based on their waiting time.
+            </li>
+
+            <li>
+              <strong>Filtered Calls:</strong> Users can choose who they want to
+              connect with based on their college. For example, if{" "}
+              <strong>User 1</strong> from College A is looking for someone from
+              College B, while <strong>User 2</strong> from College B is looking
+              for someone from College A, UniVibe detects the mutual preference
+              and pairs them together.
+            </li>
+
+            <li>
+              <strong>Smart Fallback Matching:</strong> Filtered calls follow a
+              <strong> College → Year → Field of Study → Random</strong>{" "}
+              matching hierarchy. If no suitable match is found at the college
+              level, UniVibe progressively broadens the search. Each fallback
+              stage runs for <strong>20 seconds</strong>, giving users a chance
+              to find the closest possible match before eventually falling back
+              to a completely random connection.
+            </li>
           </ol>
         </div>
-        
+
         <div className="py-5">
           <h2 className="text-3xl font-bold py-5">Rules</h2>
-          <ol className="pl-10 list-decimal">
-            <li>You must be 18+</li>
-            <li>Be respectful</li>
-            <li>No Nudity, Hate Speech, Harasment.</li>
-            <li>Violators will be banned and further actions will be taken.</li>
+          <ol className="pl-10 list-decimal space-y-3">
+            <li>
+              <strong>18+ Only:</strong> UniVibe is exclusively for users aged
+              18 and above.
+            </li>
+
+            <li>
+              <strong>Respect Everyone:</strong> Treat every person you meet
+              with respect. Keep conversations friendly, respectful, and
+              welcoming.
+            </li>
+
+            <li>
+              <strong>Zero Tolerance for Abuse:</strong> Nudity, hate speech,
+              harassment, threats, or any other abusive behavior are strictly
+              prohibited.
+            </li>
+
+            <li>
+              <strong>Violations Have Consequences:</strong> Users who break
+              these rules may be permanently banned, and further action may be
+              taken when necessary.
+            </li>
           </ol>
         </div>
       </div>
 
       <form
         onSubmit={handleStartCall}
-        className="flex flex-col items-center justify-center gap-4"
+        className="flex flex-col items-center justify-center gap-4 mt-6"
       >
-        <div className="flex gap-5">
-          <Button type="submit" disabled={enableFilters && !filtersValid}>
+        <div className="flex gap-6 items-center">
+          <Button
+            type="submit"
+            disabled={enableFilters && !filtersValid}
+            className="text-lg font-bold px-6 py-6 rounded-full cursor-pointer"
+          >
             Start Call
           </Button>
 
-          <div className="flex items-center gap-3 rounded-lg border border-border/70 bg-card px-3 py-2">
-            <Label htmlFor="single-call-filters" className="cursor-pointer text-sm">
+          <div className="flex items-center gap-3 rounded-full border border-border/70 bg-card px-3 py-3 cursor-pointer">
+            <Label htmlFor="single-call-filters" className="text-lg">
               Use filters
             </Label>
             <Switch
