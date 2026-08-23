@@ -25,6 +25,7 @@ const SignupPage = () => {
   const [pendingAction, setPendingAction] = useState<"email" | "google" | null>(
     null,
   );
+
   const router = useRouter();
 
   const handleSubmit = async (evt: React.FormEvent<HTMLFormElement>) => {
@@ -101,9 +102,7 @@ const SignupPage = () => {
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="you@college.edu"
-                    pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]*\\.edu(\\.[a-z]{2,})*$"
-                    title="Email must contain .edu (for example: college.edu or college.edu.in)"
+                    placeholder="you@gmail.com"
                     className="h-11 pl-9"
                   />
                 </div>
@@ -118,7 +117,7 @@ const SignupPage = () => {
                     name="password"
                     type="password"
                     placeholder="Enter your password"
-                    className="h-11 pl-9"
+                    className="h-11 pl-9 tracking-[0.15em] placeholder:tracking-normal placeholder:font-normal font-bold"
                   />
                 </div>
               </div>
@@ -132,7 +131,7 @@ const SignupPage = () => {
                     name="confirmPassword"
                     type="password"
                     placeholder="Re-enter your password"
-                    className="h-11 pl-9"
+                    className="h-11 pl-9 tracking-[0.15em] placeholder:tracking-normal placeholder:font-normal font-bold"
                   />
                 </div>
               </div>

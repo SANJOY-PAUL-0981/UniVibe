@@ -1,6 +1,6 @@
 "use client";
 
-import { MailIcon, LockIcon } from "lucide-react";
+import { MailIcon, LockIcon, EyeIcon, EyeOffIcon } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -26,6 +26,7 @@ const LoginPage = () => {
   const [pendingAction, setPendingAction] = useState<"email" | "google" | null>(
     null,
   );
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -96,9 +97,7 @@ const LoginPage = () => {
                     id="email"
                     type="email"
                     name="email"
-                    placeholder="you@college.edu"
-                    pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]*\\.edu(\\.[a-z]{2,})*$"
-                    title="Email must contain .edu (for example: college.edu or college.edu.in)"
+                    placeholder="you@gmail.com"
                     className="h-11 pl-9"
                     autoFocus
                   />
@@ -111,11 +110,19 @@ const LoginPage = () => {
                   <LockIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     name="password"
                     placeholder="Enter your password"
-                    className="h-11 pl-9"
+                    className={`h-11 pl-9 pr-9 ${showPassword ? "" : "tracking-[0.15em] placeholder:tracking-normal placeholder:font-normal font-bold"}`}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOffIcon className="size-4" /> : <EyeIcon className="size-4" />}
+                  </button>
                 </div>
               </div>
 
