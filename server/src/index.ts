@@ -25,7 +25,7 @@ chatHandler(io)
 
 startCleanupJobs()
 
-const PORT = process.env.PORT
+const PORT = process.env.PORT || 8080
 
 httpServer.listen(PORT, () => {
     console.log(`server running on http://localhost:${PORT}`)
