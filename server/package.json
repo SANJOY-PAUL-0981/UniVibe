@@ -2,7 +2,9 @@
   "name": "univibe-server",
   "type": "module",
   "scripts": {
-    "dev": "nodemon --exec tsx src/index.ts"
+    "dev": "nodemon --exec tsx src/index.ts",
+    "build": "prisma generate",
+    "start": "tsx src/index.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.12",
