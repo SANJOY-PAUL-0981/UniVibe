@@ -66,7 +66,7 @@ export const metadata: Metadata = {
     siteName: "UniVibe",
     images: [
       {
-        url: "/og-img.png",
+        url:"/og-img.png",
         width: 1200,
         height: 630,
         alt: "UniVibe - Where Universities Connects.",
