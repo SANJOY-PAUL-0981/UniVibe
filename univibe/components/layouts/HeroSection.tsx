@@ -4,24 +4,53 @@ import { GoDotFill } from "react-icons/go";
 import { useAnimateOnScroll } from "@/hooks/useAnimateOnScroll";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import GradientWaves from "../background/GradientWaves";
+import { useTheme } from "next-themes";
 
 const HeroSection = () => {
   const { ref, isVisible } = useAnimateOnScroll();
   const { ref: howItWorksRef, isVisible: isHowItWorksVisible } =
     useAnimateOnScroll();
   const { ref: rulesRef, isVisible: isRulesVisible } = useAnimateOnScroll();
+  const { resolvedTheme } = useTheme();
+
+  const isDark = resolvedTheme === "dark";
 
   return (
     <section
       ref={ref}
-      className="relative isolate overflow-hidden px-4 pb-24 pt-14 sm:px-8 sm:pb-28 lg:pt-20"
+      className="relative isolate overflow-hidden pb-24 pt-14 sm:pb-28 lg:pt-20"
     >
+      <div className="fixed inset-x-0 top-0 -z-10 h-screen">
+        <GradientWaves
+          horizonColor={isDark ? "#5227FF" : "#000047"}
+          waveColor={isDark ? "#FF9FFC" : "#4545E8"}
+          crestColor={isDark ? "#FFFFFF" : "#B5C0FF"}
+          speed={0.1}
+          amplitude={3}
+          waveScale={0.6}
+          waveRatio={1}
+          swell={50}
+          turbulence={10}
+          tilt={1.6}
+          zoom={1}
+          height={5.5}
+          fogDepth={11}
+          detail="high"
+          brightness={isDark ? 1 : 1.2}
+          opacity={isDark ? 1.5 : 4}
+          parallaxStrength={0.25}
+          grain
+          grainIntensity={isDark ? 0.05 : 0.04}
+          mouseInteraction={false}
+        />
+      </div>
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute left-1/2 top-10 h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.24)_0%,rgba(147,197,253,0.16)_38%,rgba(255,255,255,0)_72%)] blur-2xl" />
       </div>
 
       <div
-        className={`${isVisible ? "in-view is-visible" : ""} mx-auto flex w-full max-w-5xl flex-col items-center text-center reveal-zoom`}
+        className={`${isVisible ? "in-view is-visible" : ""} mx-auto flex w-full max-w-5xl flex-col items-center text-center reveal-zoom mb-60`}
       >
         <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-border/70 bg-muted/65 px-5 py-1.5 text-sm font-semibold tracking-wide text-foreground/90 backdrop-blur reveal-zoom reveal-delay-1">
           <GoDotFill className="size-4 text-emerald-500" />
