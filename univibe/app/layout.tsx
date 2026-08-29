@@ -66,7 +66,7 @@ export const metadata: Metadata = {
     siteName: "UniVibe",
     images: [
       {
-        url: "https://univibe.vercel.app/og-img.png",
+        url: "https://univibee.vercel.app/og-img.png",
         width: 1200,
         height: 630,
         alt: "UniVibe - Where Universities Connects.",
@@ -79,7 +79,7 @@ export const metadata: Metadata = {
     title: "UniVibe - Where Universities Connects.",
     description:
       "Meet fellow university students anonymously through random 1-on-1 video calls. Filter by college, year, or field of study. Built exclusively for university students.",
-    images: ["https://univibe.vercel.app/og-img.png"],
+    images: ["https://univibee.vercel.app/og-img.png"],
     creator: "@Sanj0yX",
   },
 
