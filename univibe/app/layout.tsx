@@ -66,7 +66,7 @@ export const metadata: Metadata = {
     siteName: "UniVibe",
     images: [
       {
-        url:"/og-img.png",
+        url:"/og-img.jpeg",
         width: 1200,
         height: 630,
         alt: "UniVibe - Where Universities Connects.",
@@ -79,7 +79,7 @@ export const metadata: Metadata = {
     title: "UniVibe - Where Universities Connects.",
     description:
       "Meet fellow university students anonymously through random 1-on-1 video calls. Filter by college, year, or field of study. Built exclusively for university students.",
-    images: ["/og-img.png"],
+    images: ["/og-img.jpeg"],
     creator: "@Sanj0yX",
   },
 
