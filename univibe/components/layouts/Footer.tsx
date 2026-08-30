@@ -53,7 +53,7 @@ const Footer = () => {
                                 rel="noreferrer"
                                 className="font-semibold text-primary underline decoration-primary/60 underline-offset-4 hover:decoration-primary"
                             >
-                                @skmahirashef04
+                                @skmahirashef04 
                             </a>
                         </p>
                     </div>
