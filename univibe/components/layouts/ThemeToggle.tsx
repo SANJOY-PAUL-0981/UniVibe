@@ -11,7 +11,7 @@ import {
   TooltipContent,
 } from "@/components/ui/tooltip";
 
-export default function ThemeToggle() {
+export default function ThemeToggle({ className }: { className?: string }) {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const haptic = useTaptic();
@@ -78,7 +78,7 @@ export default function ThemeToggle() {
         <TooltipTrigger
           onClick={toggleTheme}
           aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-          className="fixed top-4 right-4 z-50 flex size-8 items-center justify-center rounded-full border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground"
+          className={className ?? "fixed top-4 right-4 z-50 flex size-8 items-center justify-center rounded-full border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground"}
         >
           {mounted && isDark ? (
             <Sun className="size-4" />

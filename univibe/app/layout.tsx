@@ -126,10 +126,10 @@ export default function RootLayout({
           enableSystem={true}
           disableTransitionOnChange
         >
-          <div className="p-4 hidden md:inline-flex">
+          {children}
+          <div className="p-4 hidden md:block absolute top-4 right-4  ">
             <ThemeToggle />
           </div>
-          {children}
         </NextThemesProvider>
       </body>
     </html>

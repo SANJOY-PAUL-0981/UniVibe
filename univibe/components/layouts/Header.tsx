@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useAnimateOnScroll } from "@/hooks/useAnimateOnScroll";
 import { usePathname, useRouter } from "next/navigation";
+import ThemeToggle from "./ThemeToggle";
 
 const navItems = [
   { label: "How it works", href: "#howitworks" },
@@ -96,6 +97,8 @@ const Header = () => {
           </div>
           {/* Hamburger Icon - !Yummyyy */}
           <div className="md:hidden relative" ref={menuRef}>
+            <div className="flex items-center space-x-2">
+            <ThemeToggle className="flex size-8 items-center justify-center rounded-full border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground" />
             {/* The Cool Animation - Vibe Coded */}
             <button
               onClick={() => setMenuOpen((prev) => !prev)}
@@ -106,6 +109,7 @@ const Header = () => {
               <span className={`block h-0.5 w-6 bg-foreground rounded-full transition-all duration-300 ${menuOpen ? "opacity-0 scale-x-0" : ""}`} />
               <span className={`block h-0.5 w-6 bg-foreground rounded-full transition-all duration-300 origin-center ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
             </button>
+            </div>
             {/* Dropdown */}
             <div className={`absolute right-0 top-12 w-52 rounded-2xl bg-background/95 backdrop-blur-md border border-border shadow-xl transition-all duration-200 origin-top-right ${menuOpen ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"}`}>
               <div className="p-2 flex flex-col gap-1">
