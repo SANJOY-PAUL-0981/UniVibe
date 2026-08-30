@@ -38,7 +38,7 @@ const Header = () => {
   };
 
   return (
-    <header ref={ref} className="pt-4">
+    <header ref={ref} className="pt-4 z-50">
       <div
         className={`${isVisible ? "in-view" : ""} mx-auto h-24 max-w-7xl flex justify-around`}>
         <div className="flex h-full items-center gap-5 md:gap-8">

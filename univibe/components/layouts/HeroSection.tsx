@@ -21,7 +21,7 @@ const HeroSection = () => {
       ref={ref}
       className="relative isolate overflow-hidden pb-24 pt-14 sm:pb-28 lg:pt-20"
     >
-      <div className="fixed inset-x-0 top-0 -z-10 h-screen">
+      <div className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-screen">
         <GradientWaves
           horizonColor={isDark ? "#5227FF" : "#000047"}
           waveColor={isDark ? "#FF9FFC" : "#4545E8"}

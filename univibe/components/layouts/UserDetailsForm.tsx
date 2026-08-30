@@ -275,8 +275,9 @@ const UserDetailsForm = () => {
                       items={pronounOptions}
                       value={selectedPronoun}
                       onValueChange={(val) => {
-                        setSelectedPronoun(val as string);
-                        if (val !== "other") setCustomPronoun("");
+                        const next = (val as string) ?? "";       // never store undefined
+                        setSelectedPronoun(next);
+                        if (next !== "other") setCustomPronoun("");
                       }}
                     >
                       <ComboboxInput placeholder="Select pronouns" />
@@ -498,8 +499,8 @@ const UserDetailsForm = () => {
               type="button"
               onClick={() => api?.scrollTo(i)}
               className={`rounded-full transition-all duration-300 ${i === current
-                  ? "h-2 w-5 bg-primary"
-                  : "h-2 w-2 bg-muted-foreground/30 hover:bg-muted-foreground/60"
+                ? "h-2 w-5 bg-primary"
+                : "h-2 w-2 bg-muted-foreground/30 hover:bg-muted-foreground/60"
                 }`}
             />
           ))}
