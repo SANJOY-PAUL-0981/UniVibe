@@ -36,11 +36,13 @@ export default function RootLayout({
           position="top-right" />
         <NextThemesProvider
           attribute="class"
-          defaultTheme="light"
-          enableSystem={false}
+          defaultTheme="system"
+          enableSystem={true}
           disableTransitionOnChange
         >
-          <ThemeToggle />
+          <div className="p-4 hidden md:inline-flex">
+            <ThemeToggle />
+          </div>
           {children}
         </NextThemesProvider>
       </body>

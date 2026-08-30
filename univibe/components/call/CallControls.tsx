@@ -146,13 +146,13 @@ export default function CallControls({
   };
 
   return (
-    <div className="flex items-center gap-3 border-t border-border/50 px-4 py-3">
+    <div className="flex items-center gap-3 border-t border-border/50 px-10 py-3">
       <div className="flex items-center gap-2">
-        <Button variant="outline" size="icon" onClick={toggleMic}>
+        <Button variant="outline" size="lg" onClick={toggleMic} >
           {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4 text-red-600" />}
         </Button>
 
-        <Button variant="outline" size="icon" onClick={toggleCam}>
+        <Button variant="outline" size="lg" onClick={toggleCam}>
           {camOn ? (
             <Video className="h-4 w-4" />
           ) : (
@@ -168,6 +168,7 @@ export default function CallControls({
               variant="secondary"
               onClick={onSkip}
               disabled={!canSkip || actionLocked}
+              className="hover:bg-[#adc6f8] dark:hover:bg-[#2b3762] cursor-pointer"
             >
               <span>{!canSkip ? `Skip (${cooldown})` : "Skip"}</span>
               <span>
@@ -178,6 +179,7 @@ export default function CallControls({
               variant="destructive"
               onClick={onDisconnect}
               disabled={!canSkip || actionLocked}
+              className="cursor-pointer"
             >
               <span>{!canSkip ? `Exit (${cooldown})` : "Exit"}</span>
               <span>
@@ -190,7 +192,7 @@ export default function CallControls({
                 variant="outline"
                 onClick={() => setReportOpen(true)}
                 disabled={actionLocked}
-                className="border-destructive/30 text-destructive hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+                className="border-destructive/30 text-destructive hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive dark:border-destructive/50 dark:text-destructive dark:hover:border-destructive/60 dark:hover:bg-destructive/20 dark:hover:text-destructive cursor-pointer"
               >
                 <span>Report</span>
                 <span>
@@ -230,10 +232,10 @@ export default function CallControls({
         <div className="ml-auto flex items-center">
           <Button
             variant="outline"
-            size="icon"
+            size="lg"
             onClick={onOpenChat}
             aria-label="Open chat"
-            className="relative"
+            className="relative cursor-pointer hover:text-secondary-foreground dark:hover:text-[#2b3762]/80"
           >
             <MessageSquareText className="h-4 w-4" />
             {unreadCount > 0 && (

@@ -14,7 +14,7 @@ const HeroSection = () => {
   return (
     <section
       ref={ref}
-      className="relative isolate overflow-hidden px-4 pb-24 pt-14 sm:px-8 sm:pb-28 lg:pt-20"
+      className="relative isolate overflow-hidden px-4 pb-10 pt-14 sm:px-8 sm:pb-28 lg:pt-20"
     >
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute left-1/2 top-10 h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.24)_0%,rgba(147,197,253,0.16)_38%,rgba(255,255,255,0)_72%)] blur-2xl" />
