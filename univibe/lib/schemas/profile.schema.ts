@@ -30,7 +30,7 @@ const EducationalDetails = z.object({
   college: z
     .string({ error: "College name must be a string." })
     .min(3, { message: "College name too short" })
-    .max(100),
+    .max(300),
 
   fieldOfStudy: z
     .string()

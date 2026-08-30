@@ -2,7 +2,34 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Fix scrollbar jump — reserves space for scrollbar so layout never shifts */
+html {
+  scrollbar-gutter: stable;
+  overflow-y: scroll;
+}
+
 @custom-variant dark (&:is(.dark *));
+
+/* Scrollbar width */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+/* Transparent scrollbar background */
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Scrollbar thumb */
+::-webkit-scrollbar-thumb {
+  background: #191970;
+  border-radius: 999px;
+}
+
+/* Hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #626FFF;
+}
 
 /*if u wanna go back to last mode the remove this*/
   /*::view-transition-old(root),
@@ -231,6 +258,8 @@
     }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
+    scroll-padding-top: 1rem;
     }
 }
 

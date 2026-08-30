@@ -13,10 +13,96 @@ const fontMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = "https://univibee.vercel.app"
+
 export const metadata: Metadata = {
-  title: "UniVibe",
-  description: "Live Video-calls and chats with university students.",
-};
+  metadataBase: new URL(siteUrl),
+
+  title: {
+    default: "UniVibe - Where Universities Connects.",
+    template: "%s | UniVibe",
+  },
+
+  description:
+    "Meet fellow university students anonymously through random 1-on-1 video calls. Filter by college, year, or field of study. Built exclusively for university students.",
+
+  /* //This one is sketchui's verification token change it with univibe's own when needed
+  verification: {
+    google: "kUKSMU6xUgjz5M3Nko0oE7vM13axrASTSIG__iETTko",
+  },
+  */
+
+  keywords: [
+    "university video chat",
+    "anonymous video call",
+    "student video chat",
+    "random video call students",
+    "college anonymous chat",
+    "meet university students",
+    "student social platform",
+    "anonymous student chat",
+    "univibe",
+    "random vc",
+    "anonymous vc",
+    "random university vc",
+    "anonymous university vc",
+  ],
+
+  authors: [{ name: "UniVibe", url: siteUrl }],
+  creator: "UniVibe",
+  publisher: "UniVibe",
+
+  alternates: {
+    canonical: siteUrl,
+  },
+
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: siteUrl,
+    title: "UniVibe - Where Universities Connects.",
+    description:
+      "Meet fellow university students anonymously through random 1-on-1 video calls. Filter by college, year, or field of study. Built exclusively for university students.",
+    siteName: "UniVibe",
+    images: [
+      {
+        url:"/og-img.jpeg",
+        width: 1200,
+        height: 630,
+        alt: "UniVibe - Where Universities Connects.",
+      },
+    ]
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "UniVibe - Where Universities Connects.",
+    description:
+      "Meet fellow university students anonymously through random 1-on-1 video calls. Filter by college, year, or field of study. Built exclusively for university students.",
+    images: ["/og-img.jpeg"],
+    creator: "@Sanj0yX",
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+  },
+
+  category: "Social Networking",
+}
+
 
 export default function RootLayout({
   children,
@@ -36,11 +122,13 @@ export default function RootLayout({
           position="top-right" />
         <NextThemesProvider
           attribute="class"
-          defaultTheme="light"
-          enableSystem={false}
+          defaultTheme="system"
+          enableSystem={true}
           disableTransitionOnChange
         >
-          <ThemeToggle />
+          <div className="p-4 hidden md:inline-flex">
+            <ThemeToggle />
+          </div>
           {children}
         </NextThemesProvider>
       </body>

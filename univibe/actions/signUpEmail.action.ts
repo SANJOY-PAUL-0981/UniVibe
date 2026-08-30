@@ -2,10 +2,6 @@
 
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-const isEduEmail = (email: string) => {
-    const domain = email.split("@")[1] ?? "";
-    return domain.toLowerCase().includes(".edu");
-}
 
 export const signUpEmailAction = async (formData: FormData) => {
     const name = String(formData.get("name"))
@@ -20,10 +16,6 @@ export const signUpEmailAction = async (formData: FormData) => {
         return {
             error: "Please Enter Your Email"
         }
-    }
-
-    if (!isEduEmail(email)) {
-        return { error: "Use a valid educational email containing .edu (e.g. college.edu or college.edu.in)" }
     }
 
     const password = String(formData.get("password"))

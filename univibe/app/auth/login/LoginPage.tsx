@@ -1,10 +1,10 @@
 "use client";
 
-import { MailIcon, LockIcon, UserIcon } from "lucide-react";
+import { MailIcon, LockIcon, EyeIcon, EyeOffIcon } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
-import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 import { signIn } from "@/lib/auth-client";
 
 import { Button } from "@/components/ui/button";
@@ -19,28 +19,30 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { signUpEmailAction } from "@/actions/signUpEmail.action";
+import Link from "next/link";
+import { signInEmailAction } from "@/actions/signInEmail.action";
 
-const SignupPage = () => {
+const LoginPage = () => {
   const [pendingAction, setPendingAction] = useState<"email" | "google" | null>(
     null,
   );
-
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleSubmit = async (evt: React.FormEvent<HTMLFormElement>) => {
     evt.preventDefault();
     setPendingAction("email");
 
     const formData = new FormData(evt.currentTarget);
-    const { error } = await signUpEmailAction(formData); // change
+    const { error } = await signInEmailAction(formData);
 
     if (error) {
       toast.error(error);
       setPendingAction(null);
     } else {
-      toast.success("Verification email sent! Please check your inbox.");
-      router.push("/auth/verify");
+      toast.success("Login successful. Good to have you back.");
+      router.push("/auth/callback"); // this will be checked, if user-details is in DB then push /profile if not in DB then push /user-details
     }
   };
 
@@ -50,14 +52,21 @@ const SignupPage = () => {
 
       await signIn.social({
         provider: "google",
-        callbackURL: "/auth/callback",
-        errorCallbackURL: "/auth/login/error"
-      })
+        callbackURL: "/auth/callback", // this will be checked, if user-details is in DB then push /profile if not in DB then push /user-details
+        errorCallbackURL: "/auth/login/error",
+      });
     } catch (err) {
       toast.error("Google sign in failed");
       setPendingAction(null);
     }
   };
+
+  useEffect(() => {
+    const err = searchParams.get("error");
+    if (err === "edu_email_required") {
+      toast.error("Only educational emails containing .edu are allowed");
+    }
+  }, [searchParams]);
 
   return (
     <main className="relative min-h-dvh overflow-hidden bg-background px-4 py-10 sm:px-6 lg:px-8">
@@ -70,40 +79,27 @@ const SignupPage = () => {
               UniVibe
             </p>
             <CardTitle className="text-2xl font-semibold tracking-tight text-card-foreground sm:text-3xl">
-              Create an account
+              Welcome back
             </CardTitle>
             <CardDescription className="text-sm text-muted-foreground">
-              Join us today and start your journey
+              Sign in to continue your journey.
             </CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-6 px-6 sm:px-8">
-            {/* Form Body */}
+            {/*login form*/}
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <div className="relative">
-                  <UserIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="name"
-                    name="name"
-                    type="text"
-                    placeholder="Your full name"
-                    className="h-11 pl-9"
-                  />
-                </div>
-              </div>
-
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
                   <MailIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="email"
-                    name="email"
                     type="email"
+                    name="email"
                     placeholder="you@gmail.com"
                     className="h-11 pl-9"
+                    autoFocus
                   />
                 </div>
               </div>
@@ -114,25 +110,19 @@ const SignupPage = () => {
                   <LockIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="password"
+                    type={showPassword ? "text" : "password"}
                     name="password"
-                    type="password"
                     placeholder="Enter your password"
-                    className="h-11 pl-9 tracking-[0.15em] placeholder:tracking-normal placeholder:font-normal font-bold"
+                    className={`h-11 pl-9 pr-9 ${showPassword ? "" : "tracking-[0.15em] placeholder:tracking-normal placeholder:font-normal font-bold"}`}
                   />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <div className="relative">
-                  <LockIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type="password"
-                    placeholder="Re-enter your password"
-                    className="h-11 pl-9 tracking-[0.15em] placeholder:tracking-normal placeholder:font-normal font-bold"
-                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOffIcon className="size-4" /> : <EyeIcon className="size-4" />}
+                  </button>
                 </div>
               </div>
 
@@ -149,7 +139,7 @@ const SignupPage = () => {
                 <span
                   className={`${pendingAction === "email" ? "animate-pulse" : ""}`}
                 >
-                  {pendingAction === "email" ? "Signing Up" : "Sign Up"}
+                  {pendingAction === "email" ? "Logging In" : "Log In"}
                 </span>
               </Button>
             </form>
@@ -162,8 +152,8 @@ const SignupPage = () => {
 
             <div>
               <Button
-                onClick={handleClick}
                 disabled={pendingAction !== null}
+                onClick={handleClick}
                 variant="outline"
                 size="lg"
                 className={`h-11 w-full rounded-xl ${
@@ -178,19 +168,19 @@ const SignupPage = () => {
                 >
                   {pendingAction === "google"
                     ? "Redirecting..."
-                    : "Sign up with Google"}
+                    : "Sign in with Google"}
                 </span>
               </Button>
             </div>
           </CardContent>
 
           <CardFooter className="justify-center px-6 pb-6 text-sm text-muted-foreground sm:px-8 sm:pb-8">
-            Already have an account?{" "}
+            Don't have an account?{" "}
             <Link
-              href="/auth/login"
+              href="/auth/signup"
               className="font-medium text-primary underline-offset-4 transition hover:underline"
             >
-              Sign in
+              Sign Up
             </Link>
           </CardFooter>
         </Card>
@@ -199,4 +189,4 @@ const SignupPage = () => {
   );
 };
 
-export default SignupPage;
+export default LoginPage;

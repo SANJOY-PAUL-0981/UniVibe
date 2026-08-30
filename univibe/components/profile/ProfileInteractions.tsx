@@ -103,9 +103,9 @@ export function ProfileInteractions({ initialHobbies }: Props) {
 
   return (
     // Same card style as the other bento cells
-    <div className="rounded-2xl border border-border/70 bg-card p-6 shadow-sm">
+    <div className="rounded-2xl border border-border/70 bg-card p-5 sm:p-6 shadow-sm">
       <div className="flex items-center justify-between">
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
           Hobbies
         </h2>
         <Button variant="ghost" size="sm" className="h-7 rounded-full text-xs"
@@ -146,7 +146,7 @@ export function ProfileInteractions({ initialHobbies }: Props) {
 
       <div className="mt-3 flex flex-wrap gap-2">
         {hobbies.map((h) => (
-          <Badge key={h} variant="secondary" className="gap-1">
+          <Badge key={h} variant="secondary" className="gap-1 text-sm">
             {h}
             {editing && (
               <button type="button" onClick={() => void removeHobby(h)}
