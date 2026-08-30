@@ -17,29 +17,29 @@ export default async function ProfilePage() {
                 <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
 
                     {/* ── Card 1: Identity (spans 2 cols) ── */}
-                    <div className="flex relative md:col-span-2 rounded-2xl border border-border/70 bg-card p-10 shadow-sm">
-                        <div className="flex items-center gap-7">
+                    <div className="flex relative md:col-span-2 rounded-2xl border border-border/70 bg-card p-6 sm:p-10 shadow-sm">
+                        <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-7 w-full text-center sm:text-left">
                             <ProfileAvatar initials={initials} imageUrl={user.profile.profilePicture} />
-                            <div>
-                                <p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+                            <div className="min-w-0">
+                                <p className="text-xs sm:text-sm font-semibold uppercase tracking-widest text-muted-foreground">
                                     @{profile.username}
                                 </p>
-                                <h1 className="text-5xl font-semibold tracking-tight">{user.name}</h1>
-                                <p className="text-md text-muted-foreground">{user.email}</p>
+                                <h1 className="text-2xl sm:text-5xl font-semibold tracking-tight truncate max-w-full">{user.name}</h1>
+                                <p className="text-sm sm:text-md text-muted-foreground truncate max-w-full">{user.email}</p>
                             </div>
                         </div>
 
                         {/* Sign out — top right */}
-                        <form action={signOutAction} className="absolute right-7 top-7">
-                            <Button type="submit" variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground rounded-full">
-                                <LogOut className="h-5 w-5" />
-                                Sign out
+                        <form action={signOutAction} className="absolute right-4 top-4 sm:right-7 sm:top-7">
+                            <Button type="submit" variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground rounded-full px-2 sm:px-3">
+                                <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
+                                <span className="hidden sm:inline text-xs sm:text-sm">Sign out</span>
                             </Button>
                         </form>
                     </div>
 
                     {/* ── Card 2: Personal Details ── */}
-                    <div className="rounded-2xl border border-border/70 bg-card p-7 shadow-sm">
+                    <div className="rounded-2xl border border-border/70 bg-card p-5 sm:p-7 shadow-sm">
                         <SectionTitle>Personal</SectionTitle>
                         <div className="mt-4 flex flex-col gap-3">
                             <Field label="Gender" value={profile.gender} />
@@ -49,7 +49,7 @@ export default async function ProfilePage() {
                     </div>
 
                     {/* ── Card 3: Education (spans 2 cols) ── */}
-                    <div className="rounded-2xl border border-border/70 bg-card p-7 shadow-sm md:col-span-2">
+                    <div className="rounded-2xl border border-border/70 bg-card p-5 sm:p-7 shadow-sm md:col-span-2">
                         <SectionTitle>Education</SectionTitle>
                         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <Field label="College" value={profile.college} />

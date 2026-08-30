@@ -10,7 +10,7 @@ const UserDetails = async () => {
   })
 
   if (!session) redirect("/auth/login")
- 
+
   const profile = await prisma.profile.findUnique({
     where: { userId: session.user.id },
     select: { id: true },

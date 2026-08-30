@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import GradientWaves from "../background/GradientWaves";
 import { useTheme } from "next-themes";
+import { useState, useEffect } from "react";
 
 const HeroSection = () => {
   const { ref, isVisible } = useAnimateOnScroll();
@@ -15,6 +16,16 @@ const HeroSection = () => {
   const { resolvedTheme } = useTheme();
 
   const isDark = resolvedTheme === "dark";
+
+  // Pull the waves up for mobile
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   return (
     <section
@@ -32,9 +43,9 @@ const HeroSection = () => {
           waveRatio={1}
           swell={50}
           turbulence={10}
-          tilt={1.6}
+          tilt={isMobile ? 1.0 : 1.6}
           zoom={1}
-          height={5.5}
+          height={isMobile ? 4.5 : 5.5}
           fogDepth={11}
           detail="high"
           brightness={isDark ? 1 : 1.2}
@@ -46,7 +57,14 @@ const HeroSection = () => {
         />
       </div>
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute left-1/2 top-10 h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.24)_0%,rgba(147,197,253,0.16)_38%,rgba(255,255,255,0)_72%)] blur-2xl" />
+        <div
+          className="absolute left-1/2 top-10 h-[34rem] w-[34rem] -translate-x-1/2 rounded-full blur-2xl"
+          style={{
+            background: isDark
+              ? "radial-gradient(circle, rgba(82,39,255,0.35) 0%, rgba(255,159,252,0.15) 42%, rgba(255,255,255,0) 72%)"
+              : "radial-gradient(circle, rgba(69,69,232,0.75) 0%, rgba(181,192,255,0.50) 42%, rgba(255,255,255,0) 72%)",
+          }}
+        />
       </div>
 
       <div

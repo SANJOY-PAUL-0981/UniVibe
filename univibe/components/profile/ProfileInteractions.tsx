@@ -103,7 +103,7 @@ export function ProfileInteractions({ initialHobbies }: Props) {
 
   return (
     // Same card style as the other bento cells
-    <div className="rounded-2xl border border-border/70 bg-card p-6 shadow-sm">
+    <div className="rounded-2xl border border-border/70 bg-card p-5 sm:p-6 shadow-sm">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
           Hobbies

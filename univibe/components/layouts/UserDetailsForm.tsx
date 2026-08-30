@@ -204,12 +204,12 @@ const UserDetailsForm = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-screen py-10">
-      <Carousel className="w-[35vw]" setApi={setApi} disableArrowKeys>
+    <div className="flex flex-col items-center justify-center w-full min-h-screen py-6 sm:py-10 px-4">
+      <Carousel className="w-full max-w-md" setApi={setApi} disableArrowKeys>
         <CarouselContent className="flex items-center">
           {/*Personal Details*/}
           <CarouselItem>
-            <div className="p-5">
+            <div className="p-1 sm:p-2">
               <Card className="shadow-8xl backdrop-blur-3xl border">
                 <CardContent className="border-b border-border/70 p-6">
                   <div className="flex flex-col gap-2 text-center">
@@ -310,7 +310,7 @@ const UserDetailsForm = () => {
 
           {/*Education Details*/}
           <CarouselItem>
-            <div className="p-4 sm:p-8">
+            <div className="p-1 sm:p-2">
               <Card className="shadow-8xl backdrop-blur-3xl border">
                 <CardContent className="border-b border-border/70 p-6">
                   <div className="flex flex-col gap-2 text-center">
@@ -381,7 +381,7 @@ const UserDetailsForm = () => {
 
           {/*Miscellaneous*/}
           <CarouselItem>
-            <div className="p-4 sm:p-8">
+            <div className="p-1 sm:p-2">
               <Card className="shadow-8xl backdrop-blur-3xl border">
                 <CardContent className="border-b border-border/70 p-6">
                   <div className="flex flex-col gap-2 text-center">
@@ -482,7 +482,7 @@ const UserDetailsForm = () => {
         </CarouselContent>
       </Carousel>
 
-      <div className="mt-1 flex items-center justify-between gap-3 px-3 py-2 w-[35vw]">
+      <div className="mt-1 flex items-center justify-between gap-3 px-3 py-2 w-full max-w-md">
         {current > 0 ? (
           <Button type="button" variant="outline" onClick={goBack} className="cursor-pointer">
             <ChevronLeft className="size-4" />
