@@ -61,11 +61,11 @@ export default function CallChat({
   };
 
   return (
-    <div className="flex h-full w-full flex-col bg-background rounded-tl-2xl">
+    <div className="flex h-full w-full flex-col bg-background sm:rounded-tl-2xl">
       <div className="flex items-center justify-between border-b border-border/50 p-4">
         <div className="p-1">
           <p className="text-sm font-medium">Chat</p>
-          <p className="text-xs text-muted-foreground">Room {roomId}</p>
+          <p className="text-xs text-muted-foreground truncate max-w-[200px]">Room {roomId}</p>
         </div>
         <Button
           variant="outline"

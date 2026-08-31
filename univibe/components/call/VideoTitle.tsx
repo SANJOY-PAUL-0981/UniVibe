@@ -60,7 +60,7 @@ export default function VideoTitle({
         autoPlay
         muted={muted}
         playsInline
-        className={`h-full w-full object-cover object-center ${!videoActive ? "invisible" : ""}`}
+        className={`h-full w-full object-cover object-center scale-x-[-1] ${!videoActive ? "invisible" : ""}`}
       />
 
       {/* Avatar overlay — shown on top when cam is off */}

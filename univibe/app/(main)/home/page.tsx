@@ -127,11 +127,11 @@ const Home = () => {
   };
 
   return (
-    <div className="flex flex-col items-center py-10">
-      <div className="w-[65vw]">
+    <div className="flex flex-col items-center py-5 sm:py-10">
+      <div className="w-[90vw] sm:w-[65vw]">
         <div className="py-5">
-          <h2 className="text-3xl font-bold py-5">How it Works</h2>
-          <ol className="pl-10 list-decimal space-y-3">
+          <h2 className="text-2xl sm:text-3xl font-bold py-3 sm:py-5">How it Works</h2>
+          <ol className="pl-6 sm:pl-10 list-decimal space-y-3">
             <li>
               <strong>UniVibe</strong> is an anonymous random video-calling
               platform built exclusively for university students across India,
@@ -167,8 +167,8 @@ const Home = () => {
         </div>
 
         <div className="py-5">
-          <h2 className="text-3xl font-bold py-5">Rules</h2>
-          <ol className="pl-10 list-decimal space-y-3">
+          <h2 className="text-2xl sm:text-3xl font-bold py-3 sm:py-5">Rules</h2>
+          <ol className="pl-6 sm:pl-10 list-decimal space-y-3">
             <li>
               <strong>18+ Only:</strong> UniVibe is exclusively for users aged
               18 and above.

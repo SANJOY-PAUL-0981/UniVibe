@@ -119,11 +119,6 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
     }
   }, [isChatOpen, resetUnread]);
 
-  // // Temporary code snippet - for testing diff screens
-  // useEffect(() => {
-  //   setChecking(false);
-  //   setMode("connected");
-  // }, []);
 
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -384,8 +379,8 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
       <div className="relative flex h-full w-full">
         {/* Left side: Video and Controls */}
         <div className="relative flex flex-1 flex-col overflow-hidden">
-          <div className="relative flex-1 overflow-hidden w-[75%] mx-auto">
-            <div className="absolute inset-0 h-[85vh] my-auto overflow-hidden rounded-2xl border-2 border-border bg-secondary/80 shadow-3xl backdrop-blur-md">
+          <div className="relative flex-1 overflow-hidden w-full sm:w-[80%] sm:mx-auto">
+            <div className="absolute inset-3 rounded-2xl sm:inset-0 sm:h-[85vh] sm:my-auto overflow-hidden sm:rounded-2xl border-2 border-border bg-secondary/80 shadow-3xl backdrop-blur-md">
               {/* Remote Stream */}
               <VideoTile
                 stream={remoteStream}
@@ -407,7 +402,7 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
               />
             </div>
 
-            <div className="absolute right-8 bottom-20 z-20 h-30 w-48 overflow-hidden rounded-2xl border-2 border-border bg-secondary/80 shadow-3xl backdrop-blur-md sm:h-40 sm:w-60">
+            <div className="absolute right-3 bottom-16 z-20 h-24 w-36 overflow-hidden rounded-xl border-2 border-border bg-secondary/80 shadow-3xl backdrop-blur-md sm:right-8 sm:bottom-20 sm:h-40 sm:w-60 sm:rounded-2xl">
               {/**My Stream */}
               <VideoTile
                 key={localStream?.id ?? "local"}
@@ -457,7 +452,7 @@ export default function CallClient({ profileId, roomId, isInitiator }: Props) {
 
         {/* Right side: Chat Panel */}
         {isChatOpen && (
-          <div className="h-[92vh] w-[380px] bg-background shadow-2xl rounded-2xl mt-auto border border-border">
+          <div className="fixed inset-0 z-50 sm:static sm:inset-auto sm:z-auto sm:h-[92vh] sm:w-[380px] bg-background shadow-2xl sm:rounded-2xl sm:mt-auto border border-border">
             <CallChat
               socket={socket}
               roomId={currentRoomId}

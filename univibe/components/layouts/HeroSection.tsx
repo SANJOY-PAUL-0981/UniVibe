@@ -5,7 +5,6 @@ import { useAnimateOnScroll } from "@/hooks/useAnimateOnScroll";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useTheme } from "next-themes";
-import ThemeToggle from "./ThemeToggle";
 
 const HeroSection = () => {
   const { ref, isVisible } = useAnimateOnScroll();

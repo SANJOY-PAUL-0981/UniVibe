@@ -26,10 +26,10 @@ export const NoMatchScreen = () => {
       {/* Content Container */}
       <div className="relative flex h-full w-full flex-col items-center justify-center px-4">
         {/* Main Card */}
-        <div className="flex flex-col items-center gap-6 rounded-3xl border-2 border-border bg-secondary/60 backdrop-blur-lg p-8 sm:p-12 max-w-md shadow-2xl">
+        <div className="flex flex-col items-center gap-4 sm:gap-6 rounded-3xl border-2 border-border bg-secondary/60 backdrop-blur-lg p-6 sm:p-12 w-[90vw] max-w-md shadow-2xl">
           {/* Icon */}
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-destructive/20">
-            <AlertCircle className="h-10 w-10 text-destructive" />
+          <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-destructive/20">
+            <AlertCircle className="h-8 w-8 sm:h-10 sm:w-10 text-destructive" />
           </div>
 
           {/* Heading */}

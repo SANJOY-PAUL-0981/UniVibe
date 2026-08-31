@@ -146,8 +146,8 @@ export default function CallControls({
   };
 
   return (
-    <div className="flex items-center gap-3 border-t border-border/50 px-10 py-3">
-      <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 sm:gap-3 border-t border-border/50 px-3 sm:px-10 py-3">
+      <div className="flex flex-1 sm:flex-none items-center gap-2">
         <Button variant="outline" size="lg" onClick={toggleMic} >
           {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4 text-red-600" />}
         </Button>
@@ -170,7 +170,7 @@ export default function CallControls({
               disabled={!canSkip || actionLocked}
               className="hover:bg-[#adc6f8] dark:hover:bg-[#2b3762] cursor-pointer"
             >
-              <span>{!canSkip ? `Skip (${cooldown})` : "Skip"}</span>
+              <span className="hidden sm:inline">{!canSkip ? `Skip (${cooldown})` : "Skip"}</span>
               <span>
                 <SkipForward />
               </span>
@@ -181,7 +181,7 @@ export default function CallControls({
               disabled={!canSkip || actionLocked}
               className="cursor-pointer"
             >
-              <span>{!canSkip ? `Exit (${cooldown})` : "Exit"}</span>
+              <span className="hidden sm:inline">{!canSkip ? `Exit (${cooldown})` : "Exit"}</span>
               <span>
                 <SquareArrowRightExit />
               </span>
@@ -194,7 +194,7 @@ export default function CallControls({
                 disabled={actionLocked}
                 className="border-destructive/30 text-destructive hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive dark:border-destructive/50 dark:text-destructive dark:hover:border-destructive/60 dark:hover:bg-destructive/20 dark:hover:text-destructive cursor-pointer"
               >
-                <span>Report</span>
+                <span className="hidden sm:inline">Report</span>
                 <span>
                   <Flag />
                 </span>
@@ -229,7 +229,7 @@ export default function CallControls({
       </div>
 
       {!isChatOpen && (
-        <div className="ml-auto flex items-center">
+        <div className="flex flex-1 sm:flex-none ml-0 sm:ml-auto items-center justify-end">
           <Button
             variant="outline"
             size="lg"
