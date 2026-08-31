@@ -32,7 +32,7 @@ export default function WaitingScreen({
 
       <div className="relative flex h-full w-full flex-col items-center justify-center">
         {/* Stranger Video - Waiting State */}
-        <div className="absolute inset-0 h-[75vh] my-auto mx-auto w-[75%] overflow-hidden rounded-2xl border-2 border-border bg-secondary/80 shadow-3xl backdrop-blur-md flex flex-col items-center justify-center gap-4">
+        <div className="absolute inset-3 rounded-2xl sm:inset-0 sm:h-[80vh] sm:my-auto sm:mx-auto sm:w-[80%] sm:rounded-2xl overflow-hidden border-2 border-border bg-secondary/80 shadow-3xl backdrop-blur-md flex flex-col items-center justify-center gap-4">
           <Loader2 className="w-12 h-12 animate-spin text-primary" />
           <p className="text-lg font-medium text-foreground">{message}</p>
           {showTimer && (
@@ -44,7 +44,7 @@ export default function WaitingScreen({
         </div>
 
         {/* Local Video - Bottom Right */}
-        <div className="absolute right-10 bottom-24 z-20 h-36 w-52 overflow-hidden rounded-2xl border-2 border-border bg-secondary/80 shadow-3xl backdrop-blur-md sm:h-40 sm:w-60">
+        <div className="absolute right-3 bottom-16 z-20 h-24 w-36 overflow-hidden rounded-xl border-2 border-border bg-secondary/80 shadow-3xl backdrop-blur-md sm:right-10 sm:bottom-24 sm:h-36 sm:w-52 sm:rounded-2xl">
           <VideoTile
             stream={localStream}
             label="You"
