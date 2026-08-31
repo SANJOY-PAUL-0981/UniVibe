@@ -49,7 +49,7 @@ const Header = () => {
     const target = document.querySelector(href);
     if (target instanceof HTMLElement) {
       target.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    } 
   };
 
   return (
